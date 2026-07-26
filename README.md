@@ -48,12 +48,12 @@ As regras, convenções físicas e limitações desta entrega estão em [`docs/m
 
 O Economize é um monólito modular organizado por domínio. Atualmente, os módulos implementam principalmente entidades e repositórios. As próximas funcionalidades devem acrescentar entradas HTTP, casos de uso e regras de domínio dentro do módulo responsável, sem criar pacotes globais por camada.
 
-Cada módulo começa plano e só ganha subpacotes como `http`, `aplicacao`, `dominio` e `persistencia` quando responsabilidades concretas justificarem a divisão. DTOs HTTP permanecem próximos ao adapter, sob `http/dto`, e nunca dependem de entidades JPA ou repositórios.
+Cada módulo começa plano e só ganha subpacotes como `http`, `application`, `domain` e `persistence` quando responsabilidades concretas justificarem a divisão. DTOs HTTP permanecem próximos ao adapter, sob `http/dto`, e nunca dependem de entidades JPA ou repositórios.
 
 ```text
 src/main/java/com/joaovpg/economize/
 ├── categoria/
-├── compartilhado/persistencia/
+├── shared/
 ├── conta/
 ├── recorrencia/
 ├── transacao/

@@ -1,6 +1,6 @@
 package com.joaovpg.economize.usuario.http.dto.request;
 
-import com.joaovpg.economize.usuario.http.validacao.TimezoneValido;
+import com.joaovpg.economize.usuario.http.validation.TimezoneValido;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

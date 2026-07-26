@@ -28,7 +28,7 @@ Não faça limpeza, atualização de dependências ou refatoração ampla fora d
 
 Organize o código por módulo de domínio, não em pacotes globais por camada. Cada módulo pode conter suas próprias entradas HTTP, aplicação, domínio e persistência quando houver código real para essas responsabilidades. Não crie pacotes, interfaces ou abstrações vazias como preparação especulativa.
 
-Módulos começam em um package plano. Quando o volume prejudicar a navegação, subdivida somente as responsabilidades existentes em `http`, `aplicacao`, `dominio` e `persistencia`. Em `http`, DTOs podem ser agrupados em `dto/request` e `dto/response`. DTOs e mappers nunca acessam repositories; mappers permanecem junto ao adapter que traduzem e não contêm regras de negócio.
+Módulos começam em um package plano. Quando o volume prejudicar a navegação, subdivida somente as responsabilidades existentes em `http`, `application`, `domain` e `persistence`. Em `http`, DTOs podem ser agrupados em `dto/request` e `dto/response`. DTOs e mappers nunca acessam repositories; mappers permanecem junto ao adapter que traduzem e não contêm regras de negócio.
 
 A direção das dependências é:
 
@@ -36,7 +36,7 @@ A direção das dependências é:
 HTTP e infraestrutura -> aplicação e domínio
 ```
 
-O domínio não depende de REST, DTOs ou integrações externas. Módulos colaboram por contratos públicos pequenos. Não acesse detalhes internos de outro módulo. Coloque em `compartilhado` apenas conceitos realmente transversais; não o transforme em um pacote genérico de utilitários.
+O domínio não depende de REST, DTOs ou integrações externas. Módulos colaboram por contratos públicos pequenos. Não acesse detalhes internos de outro módulo. Coloque em `shared` apenas conceitos realmente transversais; não o transforme em um pacote genérico de utilitários.
 
 Use a menor visibilidade possível. Torne público somente o que precisa atravessar uma fronteira real.
 

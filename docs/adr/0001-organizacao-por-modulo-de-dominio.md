@@ -21,9 +21,9 @@ transacao/
 |   |   |-- request/
 |   |   `-- response/
 |   `-- TransacaoHttpMapper.java
-|-- aplicacao/
-|-- dominio/
-`-- persistencia/
+|-- application/
+|-- domain/
+`-- persistence/
 ```
 
 Subpackages sao criados sob demanda, nao como estrutura vazia. Casos de uso recebem nomes de intencao, como `CriarTransacao`, em vez de um `TransacaoService` generico.

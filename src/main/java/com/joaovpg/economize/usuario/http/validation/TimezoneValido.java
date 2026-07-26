@@ -1,4 +1,4 @@
-package com.joaovpg.economize.usuario.http.validacao;
+package com.joaovpg.economize.usuario.http.validation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

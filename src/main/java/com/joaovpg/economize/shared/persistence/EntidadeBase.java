@@ -29,12 +29,12 @@ public abstract class EntidadeBase {
 
     @PrePersist
     protected void prepararCriacao() {
-        var agora = Instant.now();
+        var now = Instant.now();
         if (id == null) {
             id = UUID.randomUUID();
         }
-        criadoEm = agora;
-        atualizadoEm = agora;
+        criadoEm = now;
+        atualizadoEm = now;
     }
 
     @PreUpdate
