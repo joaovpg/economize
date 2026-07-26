@@ -1,0 +1,33 @@
+package com.joaovpg.economize.recorrencia;
+
+import com.joaovpg.economize.compartilhado.persistencia.EntidadeBase;
+import com.joaovpg.economize.usuario.Usuario;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@Entity
+@Table(name = "TB004_GRUPO_RECORRENCIA")
+public class GrupoRecorrencia extends EntidadeBase {
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "ID_USUARIO", nullable = false)
+    private Usuario usuario;
+
+    @Column(name = "STR_DESCRICAO", nullable = false, length = 255)
+    private String descricao;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "STR_STATUS", nullable = false, length = 20)
+    private StatusRecorrencia status;
+}

@@ -1,82 +1,161 @@
-# economize
+# Economize
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+[![CI](https://github.com/joaovpg/economize/actions/workflows/ci.yml/badge.svg)](https://github.com/joaovpg/economize/actions/workflows/ci.yml)
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+Backend de um sistema pessoal para registrar e catalogar receitas, despesas, transferências e recorrências financeiras.
 
-## Running the application in dev mode
+> [!IMPORTANT]
+> O projeto está em desenvolvimento. A entrega atual implementa o núcleo de persistência, autenticação JWT e a criação de transações planejadas.
 
-You can run your application in dev mode that enables live coding using:
+## Estado atual
 
-```shell script
+O repositório contém:
+
+- schema PostgreSQL versionado com Flyway;
+- entidades JPA e repositórios Panache para usuários, contas, categorias, recorrências, transações e transferências;
+- constraints e uma trigger diferida para proteger invariantes financeiras;
+- testes de integração da persistência com banco real via Quarkus Dev Services;
+- login com e-mail e senha, emissão de JWT e criação autenticada de receitas e despesas planejadas;
+- infraestrutura REST e OpenAPI configurada, além de dependências planejadas para mapeamentos, integrações e métricas.
+
+O próximo marco continua o CRUD do MVP com gestão de contas e categorias e demais operações de transações. Consulte o [roadmap](docs/roadmap.md) para todas as entregas planejadas.
+
+## Modelo financeiro
+
+Cada registro financeiro pertence a um único usuário. O domínio atual é dividido em:
+
+| Módulo | Responsabilidade |
+| --- | --- |
+| `usuario` | Identidade e isolamento dos dados |
+| `conta` | Contas financeiras e saldo inicial |
+| `categoria` | Classificação hierárquica de receitas e despesas |
+| `recorrencia` | Grupos e segmentos de recorrência |
+| `transacao` | Receitas, despesas e lados de transferências |
+| `transferencia` | Operação que vincula uma saída e uma entrada |
+
+As regras, convenções físicas e limitações desta entrega estão em [`docs/modelo-financeiro.md`](docs/modelo-financeiro.md).
+
+## Tecnologias
+
+- Java 25 LTS e Quarkus 3;
+- Maven Wrapper;
+- PostgreSQL, Hibernate ORM with Panache e Flyway;
+- Quarkus REST, Jackson e SmallRye OpenAPI;
+- MapStruct, REST Client e Micrometer;
+- JUnit 5, Quarkus Test e REST Assured.
+
+## Arquitetura
+
+O Economize é um monólito modular organizado por domínio. Atualmente, os módulos implementam principalmente entidades e repositórios. As próximas funcionalidades devem acrescentar entradas HTTP, casos de uso e regras de domínio dentro do módulo responsável, sem criar pacotes globais por camada.
+
+Cada módulo começa plano e só ganha subpacotes como `http`, `aplicacao`, `dominio` e `persistencia` quando responsabilidades concretas justificarem a divisão. DTOs HTTP permanecem próximos ao adapter, sob `http/dto`, e nunca dependem de entidades JPA ou repositórios.
+
+```text
+src/main/java/com/joaovpg/economize/
+├── categoria/
+├── compartilhado/persistencia/
+├── conta/
+├── recorrencia/
+├── transacao/
+├── transferencia/
+└── usuario/
+```
+
+Consulte [`AGENTS.md`](AGENTS.md) para as regras de arquitetura e implementação.
+
+## Pré-requisitos
+
+- JDK 25 com `JAVA_HOME` configurado;
+- Docker ou outro runtime de contêiner compatível, usado pelo Quarkus Dev Services;
+- Git.
+
+Não é necessário instalar Maven separadamente: o repositório inclui o Maven Wrapper.
+
+## Desenvolvimento local
+
+O Quarkus Dev Services inicia e configura um PostgreSQL em contêiner quando nenhum datasource é fornecido.
+
+Linux e macOS:
+
+```shell
 ./mvnw quarkus:dev
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+Windows PowerShell:
 
-## Packaging and running the application
+```powershell
+.\mvnw.cmd quarkus:dev
+```
 
-The application can be packaged using:
+A aplicação fica disponível em <http://localhost:8080>. Durante o desenvolvimento, a Dev UI do Quarkus fica em <http://localhost:8080/q/dev/>.
 
-```shell script
+## Testes
+
+Para executar a suíte de testes:
+
+```shell
+./mvnw test
+```
+
+No Windows:
+
+```powershell
+.\mvnw.cmd test
+```
+
+A validação usada pela CI é:
+
+```shell
+./mvnw verify -B
+```
+
+Os testes de persistência dependem de um runtime de contêiner disponível para iniciar o PostgreSQL.
+
+## Configuração
+
+No desenvolvimento e nos testes, o datasource pode ser fornecido pelo Dev Services. No profile `prod`, configure:
+
+| Variável | Descrição | Exemplo |
+| --- | --- | --- |
+| `DB_URL` | URL JDBC do PostgreSQL | `jdbc:postgresql://localhost:5432/economize` |
+| `DB_USERNAME` | Usuário do banco | `economize` |
+| `DB_PASSWORD` | Senha do banco | Não versionar este valor |
+| `JWT_CHAVE_PUBLICA` | Localização da chave pública RSA usada para validar tokens | `/run/secrets/jwt-public.pem` |
+| `JWT_CHAVE_PRIVADA` | Localização da chave privada RSA usada para assinar tokens | `/run/secrets/jwt-private.pem` |
+| `JWT_EXPIRACAO_SEGUNDOS` | Validade do token de acesso | `900` |
+
+O Flyway aplica as migrations na inicialização e o Hibernate apenas valida o schema. O projeto não carrega arquivos `.env` por conta própria; forneça as variáveis pelo ambiente ou pela plataforma de execução.
+
+## Build JVM
+
+Linux e macOS:
+
+```shell
 ./mvnw package
+java -jar target/quarkus-app/quarkus-run.jar
 ```
 
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+Windows PowerShell:
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
-
-If you want to build an _über-jar_, execute the following command:
-
-```shell script
-./mvnw package -Dquarkus.package.jar.type=uber-jar
+```powershell
+.\mvnw.cmd package
+java -jar target/quarkus-app/quarkus-run.jar
 ```
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
+## Build nativo
 
-## Creating a native executable
+O build nativo é opcional e requer uma distribuição GraalVM/Mandrel compatível. Para produzir o executável usando um contêiner:
 
-You can create a native executable using:
-
-```shell script
-./mvnw package -Dnative
-```
-
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
-
-```shell script
+```shell
 ./mvnw package -Dnative -Dquarkus.native.container-build=true
 ```
 
-You can then execute your native executable with: `./target/economize-1.0.0-SNAPSHOT-runner`
+Consulte a [documentação de build nativo do Quarkus](https://quarkus.io/guides/building-native-image) para os requisitos adicionais.
 
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
+## Documentação
 
-## Related Guides
+- [Modelo financeiro](docs/modelo-financeiro.md)
+- [Roadmap](docs/roadmap.md)
+- [Instruções para agentes](AGENTS.md)
 
-- REST ([guide](https://quarkus.io/guides/rest)): Build RESTful web services and APIs using Jakarta REST (formerly JAX-RS)
-- Hibernate ORM ([guide](https://quarkus.io/guides/hibernate-orm)): Object-relational mapping with JPA/Hibernate for relational database access
-- SmallRye OpenAPI ([guide](https://quarkus.io/guides/openapi-swaggerui)): Generate OpenAPI schemas and serve Swagger UI for REST API documentation
-- REST Jackson ([guide](https://quarkus.io/guides/rest#json-serialisation)): Jackson serialization support for Quarkus REST. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it
-- Hibernate ORM with Panache ([guide](https://quarkus.io/guides/hibernate-orm-panache)): Simplified JPA/Hibernate data access layer with active record and repository patterns
-- JDBC Driver - PostgreSQL ([guide](https://quarkus.io/guides/datasource)): Connect to the PostgreSQL database via JDBC
-- Micrometer metrics ([guide](https://quarkus.io/guides/micrometer)): Instrument the runtime and your application with dimensional metrics using Micrometer.
-
-## Provided Code
-
-### Hibernate ORM
-
-Create your first JPA entity
-
-[Related guide section...](https://quarkus.io/guides/hibernate-orm)
-
-
-[Related Hibernate with Panache section...](https://quarkus.io/guides/hibernate-orm-panache)
-
-
-### REST
-
-Easily start your REST Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+Este repositório ainda não declara uma licença de uso.

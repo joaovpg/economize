@@ -1,0 +1,46 @@
+quarkus:
+  datasource:
+    db-kind: postgresql
+  flyway:
+    migrate-at-start: true
+  hibernate-orm:
+    schema-management:
+      strategy: validate
+
+mp:
+  jwt:
+    verify:
+      issuer: economize
+
+smallrye:
+  jwt:
+    new-token:
+      issuer: economize
+      lifespan: ${JWT_EXPIRACAO_SEGUNDOS:900}
+
+"%test":
+  quarkus:
+    datasource:
+      devservices:
+        enabled: true
+    hibernate-orm:
+      schema-management:
+        strategy: validate
+
+"%prod":
+  quarkus:
+    datasource:
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
+      jdbc:
+        url: ${DB_URL}
+  mp:
+    jwt:
+      verify:
+        publickey:
+          location: ${JWT_CHAVE_PUBLICA}
+  smallrye:
+    jwt:
+      sign:
+        key:
+          location: ${JWT_CHAVE_PRIVADA}
