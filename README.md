@@ -126,6 +126,34 @@ No desenvolvimento e nos testes, o datasource pode ser fornecido pelo Dev Servic
 
 O Flyway aplica as migrations na inicialização e o Hibernate apenas valida o schema. O projeto não carrega arquivos `.env` por conta própria; forneça as variáveis pelo ambiente ou pela plataforma de execução.
 
+### Execução local com o profile `prod`
+
+O arquivo `.env.example` contém o contrato de configuração local. Crie o `.env` a partir dele e ajuste `DB_USERNAME` e `DB_PASSWORD` para o PostgreSQL disponível em `localhost`. O `.env` é ignorado pelo Git.
+
+No PowerShell 7, gere uma chave RSA privada PKCS#8 e a chave pública correspondente. O diretório `.certs/` também é ignorado pelo Git:
+
+```powershell
+New-Item -ItemType Directory -Path .certs -Force | Out-Null
+$rsa = [System.Security.Cryptography.RSA]::Create(2048)
+[System.IO.File]::WriteAllText('.certs/jwt-private.pem', $rsa.ExportPkcs8PrivateKeyPem())
+[System.IO.File]::WriteAllText('.certs/jwt-public.pem', $rsa.ExportSubjectPublicKeyInfoPem())
+$rsa.Dispose()
+```
+
+Importe o `.env` somente na sessão atual e inicie a aplicação com o profile `prod`:
+
+```powershell
+Get-Content .env |
+    Where-Object { $_ -and -not $_.StartsWith('#') } |
+    ForEach-Object {
+        $nome, $valor = $_.Split('=', 2)
+        Set-Item -Path "Env:$nome" -Value $valor
+    }
+.\mvnw.cmd quarkus:dev -Dquarkus.profile=prod
+```
+
+A aplicação ficará disponível em <http://localhost:8080>. Esse fluxo não altera o profile `%test`, que continua usando o Quarkus Dev Services quando necessita de PostgreSQL.
+
 ## Build JVM
 
 Linux e macOS:

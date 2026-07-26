@@ -20,7 +20,7 @@ import org.eclipse.microprofile.openapi.annotations.info.Info;
 @QuarkusMain(name = "api")
 public class EconomizeApp extends Application implements QuarkusApplication {
 
-    static void main(String... args) { Quarkus.run(EconomizeApp.class, args); }
+    public static void main(String... args) { Quarkus.run(EconomizeApp.class, args); }
 
     @Override
     public int run(String... args) {
