@@ -40,4 +40,4 @@ No MVP, as contas devem pertencer ao mesmo usuario, ser diferentes, estar ativas
 
 ## Limites desta entrega
 
-Esta entrega fornece migrations, entidades, repositorios, constraints estruturais, autenticacao JWT e criacao de receitas e despesas planejadas. Gestao completa de contas e categorias, demais operacoes de transacao, calculo de saldo, deteccao de ciclos, operacoes atomicas de transferencia e expansao ou edicao de recorrencias permanecem para os proximos marcos.
+Esta entrega fornece migrations, entidades, repositorios, constraints estruturais, cadastro de usuario, autenticacao JWT e criacao de receitas e despesas planejadas. Gestao completa de usuarios, contas e categorias, demais operacoes de transacao, calculo de saldo, deteccao de ciclos, operacoes atomicas de transferencia e expansao ou edicao de recorrencias permanecem para os proximos marcos.

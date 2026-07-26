@@ -2,7 +2,8 @@
 
 ## Glossario
 
-- **Usuario**: proprietario autenticado dos dados financeiros.
+- **Usuario**: identidade que possui credencial e e proprietaria dos dados financeiros.
+- **Cadastro de usuario**: criacao autonoma de um Usuario ativo com inicio imediato de uma sessao autenticada.
 - **Conta financeira**: local ao qual transacoes pertencem e que define moeda e saldo inicial.
 - **Categoria**: classificacao hierarquica opcional de receitas e despesas.
 - **Transacao**: registro financeiro de receita, despesa ou lado interno de uma transferencia.

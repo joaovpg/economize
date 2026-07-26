@@ -9,6 +9,7 @@
 ## 2. Autenticacao e CRUD do MVP
 
 - Login por e-mail e senha com Argon2 e token JWT. (implementado)
+- Cadastro publico de usuario com inicio imediato de sessao. (implementado)
 - Gestao de usuario, contas e categorias.
 - Criacao de receitas e despesas planejadas. (implementado)
 - Edicao, efetivacao, cancelamento e consulta de transacoes.

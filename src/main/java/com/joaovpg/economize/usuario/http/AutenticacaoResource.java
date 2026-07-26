@@ -1,6 +1,8 @@
 package com.joaovpg.economize.usuario.http;
 
 import com.joaovpg.economize.usuario.AutenticarUsuario;
+import com.joaovpg.economize.usuario.CadastrarUsuario;
+import com.joaovpg.economize.usuario.http.dto.request.CadastroRequest;
 import com.joaovpg.economize.usuario.http.dto.request.LoginRequest;
 import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
@@ -16,11 +18,25 @@ import jakarta.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 public class AutenticacaoResource {
     private final AutenticarUsuario autenticarUsuario;
+    private final CadastrarUsuario cadastrarUsuario;
     private final AutenticacaoHttpMapper mapper;
 
-    public AutenticacaoResource(AutenticarUsuario autenticarUsuario, AutenticacaoHttpMapper mapper) {
+    public AutenticacaoResource(
+            AutenticarUsuario autenticarUsuario,
+            CadastrarUsuario cadastrarUsuario,
+            AutenticacaoHttpMapper mapper) {
         this.autenticarUsuario = autenticarUsuario;
+        this.cadastrarUsuario = cadastrarUsuario;
         this.mapper = mapper;
+    }
+
+    @POST
+    @Path("/cadastro")
+    @PermitAll
+    public Response cadastrar(@Valid CadastroRequest request) {
+        var comando = mapper.toCommand(request);
+        var resultado = cadastrarUsuario.executar(comando);
+        return Response.status(Response.Status.CREATED).entity(mapper.toResponse(resultado)).build();
     }
 
     @POST
