@@ -1,6 +1,6 @@
 package com.joaovpg.economize.transferencia;
 
-import com.joaovpg.economize.compartilhado.persistencia.EntidadeBase;
+import com.joaovpg.economize.shared.persistence.EntidadeBase;
 import com.joaovpg.economize.conta.ContaFinanceira;
 import com.joaovpg.economize.transacao.Transacao;
 import com.joaovpg.economize.usuario.Usuario;

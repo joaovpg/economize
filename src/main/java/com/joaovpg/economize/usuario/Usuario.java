@@ -1,6 +1,6 @@
 package com.joaovpg.economize.usuario;
 
-import com.joaovpg.economize.compartilhado.persistencia.EntidadeBase;
+import com.joaovpg.economize.shared.persistence.EntidadeBase;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

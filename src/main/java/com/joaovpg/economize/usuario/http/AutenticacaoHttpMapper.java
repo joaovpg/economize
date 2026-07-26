@@ -1,7 +1,7 @@
 package com.joaovpg.economize.usuario.http;
 
-import com.joaovpg.economize.usuario.AutenticarUsuario;
-import com.joaovpg.economize.usuario.CadastrarUsuario;
+import com.joaovpg.economize.usuario.application.AutenticarUsuario;
+import com.joaovpg.economize.usuario.application.CadastrarUsuario;
 import com.joaovpg.economize.usuario.http.dto.request.CadastroRequest;
 import com.joaovpg.economize.usuario.http.dto.request.LoginRequest;
 import com.joaovpg.economize.usuario.http.dto.response.CadastroResponse;

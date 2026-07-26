@@ -1,4 +1,4 @@
-package com.joaovpg.economize.compartilhado.http;
+package com.joaovpg.economize.shared.http;
 
 import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.core.Response;

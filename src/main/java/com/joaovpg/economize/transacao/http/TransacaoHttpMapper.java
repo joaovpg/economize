@@ -1,6 +1,6 @@
 package com.joaovpg.economize.transacao.http;
 
-import com.joaovpg.economize.transacao.aplicacao.CriarTransacao;
+import com.joaovpg.economize.transacao.application.CriarTransacao;
 import com.joaovpg.economize.transacao.http.dto.request.CriarTransacaoRequest;
 import com.joaovpg.economize.transacao.http.dto.response.TransacaoResponse;
 import java.util.UUID;

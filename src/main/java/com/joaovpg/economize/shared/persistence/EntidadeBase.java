@@ -1,4 +1,4 @@
-package com.joaovpg.economize.compartilhado.persistencia;
+package com.joaovpg.economize.shared.persistence;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Id;

@@ -1,7 +1,7 @@
 package com.joaovpg.economize.recorrencia;
 
 import com.joaovpg.economize.categoria.Categoria;
-import com.joaovpg.economize.compartilhado.persistencia.EntidadeBase;
+import com.joaovpg.economize.shared.persistence.EntidadeBase;
 import com.joaovpg.economize.conta.ContaFinanceira;
 import com.joaovpg.economize.transacao.TipoTransacao;
 import com.joaovpg.economize.usuario.Usuario;

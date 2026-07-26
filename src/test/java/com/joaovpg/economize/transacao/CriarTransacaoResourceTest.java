@@ -1,6 +1,7 @@
 package com.joaovpg.economize.transacao;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.anEmptyMap;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
@@ -154,8 +155,9 @@ class CriarTransacaoResourceTest {
                         """.formatted(contaId))
                 .when().post("/api/transacoes")
                 .then()
-                .statusCode(400)
-                .body("codigo", equalTo("TIPO_TRANSACAO_INVALIDO"));
+                .statusCode(422)
+                .body("codigo", equalTo("TIPO_TRANSACAO_INVALIDO"))
+                .body("campos", anEmptyMap());
     }
 
     @Test

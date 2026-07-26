@@ -1,6 +1,7 @@
 package com.joaovpg.economize.usuario;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.anEmptyMap;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
@@ -69,8 +70,9 @@ class CadastrarUsuarioResourceTest {
                 .body(cadastro)
                 .when().post("/api/autenticacao/cadastro")
                 .then()
-                .statusCode(409)
-                .body("codigo", equalTo("EMAIL_JA_CADASTRADO"));
+                .statusCode(422)
+                .body("codigo", equalTo("EMAIL_JA_CADASTRADO"))
+                .body("campos", anEmptyMap());
     }
 
     @Test
