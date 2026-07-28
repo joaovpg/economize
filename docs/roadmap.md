@@ -10,7 +10,8 @@
 
 - Login por e-mail e senha com Argon2 e token JWT. (implementado)
 - Cadastro publico de usuario com inicio imediato de sessao. (implementado)
-- Gestao de usuario, contas e categorias.
+- Gestao de categorias: cadastro, edicao com alteracao de situacao e listagem. (implementado)
+- Gestao de usuario e contas.
 - Criacao de receitas e despesas planejadas. (implementado)
 - Edicao, efetivacao, cancelamento e consulta de transacoes.
 - Filtro por qualquer intervalo, padrao de um mes e maximo de doze meses.

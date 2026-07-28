@@ -113,7 +113,7 @@ Os testes de persistência dependem de um runtime de contêiner disponível para
 
 ## Configuração
 
-No desenvolvimento e nos testes, o datasource pode ser fornecido pelo Dev Services. No profile `prod`, configure:
+Nos profiles `dev` e `prod`, configure o datasource pelas variáveis abaixo. O profile `test` permanece isolado e usa um PostgreSQL temporário fornecido pelo Dev Services.
 
 | Variável | Descrição | Exemplo |
 | --- | --- | --- |
@@ -124,9 +124,9 @@ No desenvolvimento e nos testes, o datasource pode ser fornecido pelo Dev Servic
 | `JWT_CHAVE_PRIVADA` | Localização da chave privada RSA usada para assinar tokens | `/run/secrets/jwt-private.pem` |
 | `JWT_EXPIRACAO_SEGUNDOS` | Validade do token de acesso | `900` |
 
-O Flyway aplica as migrations na inicialização e o Hibernate apenas valida o schema. O projeto não carrega arquivos `.env` por conta própria; forneça as variáveis pelo ambiente ou pela plataforma de execução.
+O Flyway aplica as migrations na inicialização e o Hibernate apenas valida o schema. Em execução local, o Quarkus carrega automaticamente o arquivo `.env` localizado na raiz do projeto. Em outros ambientes, forneça as variáveis pela plataforma de execução.
 
-### Execução local com o profile `prod`
+### Execução local
 
 O arquivo `.env.example` contém o contrato de configuração local. Crie o `.env` a partir dele e ajuste `DB_USERNAME` e `DB_PASSWORD` para o PostgreSQL disponível em `localhost`. O `.env` é ignorado pelo Git.
 
@@ -140,19 +140,13 @@ $rsa = [System.Security.Cryptography.RSA]::Create(2048)
 $rsa.Dispose()
 ```
 
-Importe o `.env` somente na sessão atual e inicie a aplicação com o profile `prod`:
+Inicie a aplicação na raiz do projeto:
 
 ```powershell
-Get-Content .env |
-    Where-Object { $_ -and -not $_.StartsWith('#') } |
-    ForEach-Object {
-        $nome, $valor = $_.Split('=', 2)
-        Set-Item -Path "Env:$nome" -Value $valor
-    }
-.\mvnw.cmd quarkus:dev -Dquarkus.profile=prod
+.\mvnw.cmd quarkus:dev
 ```
 
-A aplicação ficará disponível em <http://localhost:8080>. Esse fluxo não altera o profile `%test`, que continua usando o Quarkus Dev Services quando necessita de PostgreSQL.
+A aplicação ficará disponível em <http://localhost:8080> e usará o banco definido no `.env`. Esse fluxo não altera o profile `%test`, que continua usando o Quarkus Dev Services quando necessita de PostgreSQL.
 
 ## Build JVM
 

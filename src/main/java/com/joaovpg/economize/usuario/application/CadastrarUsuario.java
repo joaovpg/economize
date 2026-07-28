@@ -24,6 +24,7 @@ public class CadastrarUsuario {
     @Transactional
     public Resultado executar(Comando comando) {
         var email = comando.email().strip().toLowerCase(Locale.ROOT);
+
         if (usuarioRepository.buscarPorEmail(email).isPresent()) {
             throw emailJaCadastrado();
         }

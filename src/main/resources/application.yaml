@@ -33,6 +33,14 @@ smallrye:
       schema-management:
         strategy: validate
 
+"%dev":
+  quarkus:
+    datasource:
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
+      jdbc:
+        url: ${DB_URL}
+
 "%prod":
   quarkus:
     datasource:

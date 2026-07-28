@@ -24,7 +24,9 @@ Os numeros de tabela sao permanentes e nao devem ser reutilizados. Identificador
 
 O saldo atual nao e armazenado. Ele e calculado a partir do saldo inicial da conta e das transacoes efetivadas desde `DAT_SALDO_INICIAL`. Valores de transacoes sao sempre positivos; o tipo determina se o valor entra ou sai da conta. Transacoes canceladas nao participam do saldo e ficam fora das consultas por padrao.
 
-Contas e categorias podem ser ativadas e inativadas repetidamente sem perder historico. Categorias nao possuem tipo e podem classificar receitas e despesas. Sua hierarquia admite profundidade arbitraria; a deteccao de ciclos indiretos e a verificacao de que pai e filha pertencem ao mesmo usuario devem ocorrer no futuro servico de categorias.
+Contas e categorias podem ser ativadas e inativadas repetidamente sem perder historico. Categorias nao possuem tipo e podem classificar receitas e despesas. Sua hierarquia admite profundidade arbitraria; os casos de uso de categorias detectam ciclos indiretos e verificam que pai e filha pertencem ao mesmo usuario.
+
+Categorias sao cadastradas ativas. Nome e unico sem diferenciar caixa entre categorias irmas, inclusive entre categorias raiz e independentemente da situacao. Uma categoria so pode ser cadastrada ou movida para um pai ativo. A ativacao exige todos os ancestrais ativos, enquanto a inativacao exige que nao existam descendentes ativos. Edicoes podem alterar dados, posicao e situacao atomicamente e nunca podem formar ciclos.
 
 ## Recorrencia
 
@@ -40,4 +42,4 @@ No MVP, as contas devem pertencer ao mesmo usuario, ser diferentes, estar ativas
 
 ## Limites desta entrega
 
-Esta entrega fornece migrations, entidades, repositorios, constraints estruturais, cadastro de usuario, autenticacao JWT e criacao de receitas e despesas planejadas. Gestao completa de usuarios, contas e categorias, demais operacoes de transacao, calculo de saldo, deteccao de ciclos, operacoes atomicas de transferencia e expansao ou edicao de recorrencias permanecem para os proximos marcos.
+Esta entrega fornece migrations, entidades, repositorios, constraints estruturais, cadastro de usuario, autenticacao JWT, gestao de categorias e criacao de receitas e despesas planejadas. Gestao completa de usuarios e contas, demais operacoes de transacao, calculo de saldo, operacoes atomicas de transferencia e expansao ou edicao de recorrencias permanecem para os proximos marcos.

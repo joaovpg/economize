@@ -34,4 +34,5 @@ public class Categoria extends EntidadeBase {
 
     @Column(name = "BOL_ATIVO", nullable = false)
     private boolean ativo = true;
+
 }

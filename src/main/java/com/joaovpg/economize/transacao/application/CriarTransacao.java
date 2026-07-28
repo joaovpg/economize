@@ -24,8 +24,12 @@ public class CriarTransacao {
     private final CategoriaRepository categoriaRepository;
     private final TransacaoRepository transacaoRepository;
 
-    public CriarTransacao(UsuarioRepository usuarioRepository, ContaFinanceiraRepository contaRepository,
-                          CategoriaRepository categoriaRepository, TransacaoRepository transacaoRepository) {
+    public CriarTransacao(
+            UsuarioRepository usuarioRepository,
+            ContaFinanceiraRepository contaRepository,
+            CategoriaRepository categoriaRepository,
+            TransacaoRepository transacaoRepository
+    ) {
         this.usuarioRepository = usuarioRepository;
         this.contaRepository = contaRepository;
         this.categoriaRepository = categoriaRepository;
