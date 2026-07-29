@@ -5,12 +5,22 @@
 - **Usuario**: identidade que possui credencial e e proprietaria dos dados financeiros.
 - **Cadastro de usuario**: criacao autonoma de um Usuario ativo com inicio imediato de uma sessao autenticada.
 - **Conta financeira**: local ao qual transacoes pertencem e que define moeda e saldo inicial.
+- **Situacao da conta financeira**: disponibilidade operacional de uma Conta financeira, representada por `ATIVA` ou `INATIVA`.
 - **Categoria**: classificacao hierarquica opcional de receitas e despesas.
 - **Situacao da categoria**: disponibilidade de uma Categoria, representada por `ATIVA` ou `INATIVA`.
 - **Transacao**: registro financeiro de receita, despesa ou lado interno de uma transferencia.
+- **Situacao da transacao**: condicao de uma Transacao simples, representada no MVP por `PLANEJADA` ou `EFETIVADA`.
+- **Data financeira**: data de vencimento que posiciona uma Transacao na linha do tempo financeira, independentemente do instante em que ela foi efetivada.
 - **Transferencia**: operacao atomica que vincula uma saida e uma entrada entre contas.
+- **Situacao da transferencia**: condicao compartilhada pela Transferencia e suas duas Transacoes, representada no MVP por `PLANEJADA` ou `EFETIVADA`.
 - **Grupo de recorrencia**: origem comum preservada para segmentos e excecoes recorrentes.
 - **Segmento de recorrencia**: trecho independente de uma recorrencia governado por uma RRULE.
+- **Ocorrencia recorrente**: instancia financeira prevista por um Segmento de recorrencia, virtual enquanto apenas projetada e persistida quando efetivada ou individualizada.
+- **Excecao recorrente**: ocorrencia persistida ou supressao que deixa de seguir os dados do Segmento sem perder a identidade de sua origem.
+- **Parcelamento**: plano financeiro finito composto por parcelas numeradas, com valor por parcela e quantidade total original definidos na criacao.
+- **Parcela**: ocorrencia numerada de um Parcelamento, virtual enquanto apenas projetada e persistida quando efetivada ou individualizada.
+- **Total contratado original**: valor por parcela multiplicado pela quantidade total original de um Parcelamento, preservado mesmo depois de edicoes ou cancelamentos.
+- **Total atual do parcelamento**: soma derivada das parcelas existentes de um Parcelamento depois de edicoes e cancelamentos.
 
 ## Convencoes de linguagem
 
