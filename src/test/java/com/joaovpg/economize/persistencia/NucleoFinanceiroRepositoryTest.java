@@ -16,7 +16,7 @@ import com.joaovpg.economize.recorrencia.GrupoRecorrenciaRepository;
 import com.joaovpg.economize.recorrencia.SegmentoRecorrencia;
 import com.joaovpg.economize.recorrencia.SegmentoRecorrenciaRepository;
 import com.joaovpg.economize.recorrencia.StatusRecorrencia;
-import com.joaovpg.economize.transacao.StatusTransacao;
+import com.joaovpg.economize.transacao.SituacaoTransacao;
 import com.joaovpg.economize.transacao.TipoTransacao;
 import com.joaovpg.economize.transacao.Transacao;
 import com.joaovpg.economize.transacao.TransacaoRepository;
@@ -134,6 +134,39 @@ class NucleoFinanceiroRepositoryTest {
 
     @Test
     @TestTransaction
+    void permiteAtualizarTransferenciaExistenteComContaInativa() {
+        var usuario = novoUsuario("transferencia-inativa@example.com");
+        usuarioRepository.persist(usuario);
+        var origem = novaConta(usuario, "Origem inativada");
+        var destino = novaConta(usuario, "Destino mantido");
+        contaRepository.persist(origem, destino);
+        var data = LocalDate.of(2026, 7, 24);
+        var saida = novaTransacao(usuario, origem, TipoTransacao.TRANSFERENCIA, "125.00", data);
+        var entrada = novaTransacao(usuario, destino, TipoTransacao.TRANSFERENCIA, "125.00", data);
+        transacaoRepository.persist(saida, entrada);
+        var transferencia = new Transferencia();
+        transferencia.setUsuario(usuario);
+        transferencia.setContaOrigem(origem);
+        transferencia.setContaDestino(destino);
+        transferencia.setTransacaoSaida(saida);
+        transferencia.setTransacaoEntrada(entrada);
+        transferencia.setStatus(StatusTransferencia.PLANEJADA);
+        transferencia.setDescricao("Reserva mensal");
+        transferencia.setValor(new BigDecimal("125.00"));
+        transferencia.setDataTransferencia(data);
+        transferenciaRepository.persist(transferencia);
+        transferenciaRepository.flush();
+        validarConstraintsDiferidas();
+
+        origem.setAtivo(false);
+        transferencia.setDescricao("Reserva mensal corrigida");
+        transferenciaRepository.flush();
+
+        assertEquals("Reserva mensal corrigida", transferencia.getDescricao());
+    }
+
+    @Test
+    @TestTransaction
     void rejeitaEmailDuplicado() {
         usuarioRepository.persist(novoUsuario("duplicado@example.com"));
         usuarioRepository.flush();
@@ -165,6 +198,140 @@ class NucleoFinanceiroRepositoryTest {
         contaRepository.persist(conta);
         var transacao = novaTransacao(terceiro, conta, TipoTransacao.DESPESA, "10.00", LocalDate.now());
         transacaoRepository.persist(transacao);
+
+        assertThrows(PersistenceException.class, transacaoRepository::flush);
+    }
+
+    @Test
+    @TestTransaction
+    void bloqueiaDadosIniciaisAoPersistirPrimeiraTransacao() {
+        var usuario = novoUsuario("historico@example.com");
+        usuarioRepository.persist(usuario);
+        var conta = novaConta(usuario, "Conta com historico");
+        contaRepository.persist(conta);
+        transacaoRepository.persist(novaTransacao(
+                usuario, conta, TipoTransacao.DESPESA, "10.00", LocalDate.of(2026, 1, 1)));
+        transacaoRepository.flush();
+
+        var bloqueados = (Boolean) entityManager.createNativeQuery("""
+                SELECT BOL_DADOS_INICIAIS_BLOQUEADOS
+                FROM TB002_CONTA_FINANCEIRA
+                WHERE ID_REGISTRO = :contaId
+                """).setParameter("contaId", conta.getId()).getSingleResult();
+
+        assertTrue(bloqueados);
+    }
+
+    @Test
+    @TestTransaction
+    void mantemDadosIniciaisBloqueadosDepoisDeExcluirTransacao() {
+        var usuario = novoUsuario("historico-excluido@example.com");
+        usuarioRepository.persist(usuario);
+        var conta = novaConta(usuario, "Conta com historico excluido");
+        contaRepository.persist(conta);
+        var transacao = novaTransacao(
+                usuario, conta, TipoTransacao.DESPESA, "10.00", LocalDate.of(2026, 1, 1));
+        transacaoRepository.persist(transacao);
+        transacaoRepository.flush();
+        transacaoRepository.delete(transacao);
+        transacaoRepository.flush();
+
+        var bloqueados = (Boolean) entityManager.createNativeQuery("""
+                SELECT BOL_DADOS_INICIAIS_BLOQUEADOS
+                FROM TB002_CONTA_FINANCEIRA
+                WHERE ID_REGISTRO = :contaId
+                """).setParameter("contaId", conta.getId()).getSingleResult();
+
+        assertTrue(bloqueados);
+    }
+
+    @Test
+    @TestTransaction
+    void impedeAlterarDadosIniciaisBloqueadosDiretamenteNoBanco() {
+        var usuario = novoUsuario("bloqueio-banco@example.com");
+        usuarioRepository.persist(usuario);
+        var conta = novaConta(usuario, "Conta bloqueada");
+        contaRepository.persist(conta);
+        transacaoRepository.persist(novaTransacao(
+                usuario, conta, TipoTransacao.RECEITA, "10.00", LocalDate.of(2026, 1, 1)));
+        transacaoRepository.flush();
+
+        assertThrows(PersistenceException.class, () -> entityManager.createNativeQuery("""
+                UPDATE TB002_CONTA_FINANCEIRA
+                SET DEC_SALDO_INICIAL = 100
+                WHERE ID_REGISTRO = :contaId
+                """).setParameter("contaId", conta.getId()).executeUpdate());
+    }
+
+    @Test
+    @TestTransaction
+    void bloqueiaDadosIniciaisAoPersistirPrimeiroSegmento() {
+        var usuario = novoUsuario("segmento-historico@example.com");
+        usuarioRepository.persist(usuario);
+        var conta = novaConta(usuario, "Conta recorrente");
+        contaRepository.persist(conta);
+        var grupo = novoGrupo(usuario, "Receita mensal");
+        grupoRepository.persist(grupo);
+        segmentoRepository.persist(novoSegmento(
+                grupo, conta, "100.00", "FREQ=MONTHLY", 12, LocalDate.of(2026, 1, 1)));
+        segmentoRepository.flush();
+
+        var bloqueados = (Boolean) entityManager.createNativeQuery("""
+                SELECT BOL_DADOS_INICIAIS_BLOQUEADOS
+                FROM TB002_CONTA_FINANCEIRA
+                WHERE ID_REGISTRO = :contaId
+                """).setParameter("contaId", conta.getId()).getSingleResult();
+
+        assertTrue(bloqueados);
+    }
+
+    @Test
+    @TestTransaction
+    void rejeitaOperacaoAnteriorADataDoSaldoInicial() {
+        var usuario = novoUsuario("data-inicial@example.com");
+        usuarioRepository.persist(usuario);
+        var conta = novaConta(usuario, "Conta com data inicial");
+        contaRepository.persist(conta);
+        transacaoRepository.persist(novaTransacao(
+                usuario, conta, TipoTransacao.DESPESA, "10.00", LocalDate.of(2025, 12, 31)));
+
+        assertThrows(PersistenceException.class, transacaoRepository::flush);
+    }
+
+    @Test
+    @TestTransaction
+    void rejeitaNomeDeContaDuplicadoSemDiferenciarCaixa() {
+        var usuario = novoUsuario("nome-conta@example.com");
+        usuarioRepository.persist(usuario);
+        contaRepository.persist(novaConta(usuario, "Reserva"));
+        contaRepository.flush();
+        contaRepository.persist(novaConta(usuario, "reserva"));
+
+        assertThrows(PersistenceException.class, contaRepository::flush);
+    }
+
+    @Test
+    @TestTransaction
+    void rejeitaContaComMoedaForaDoMvp() {
+        var usuario = novoUsuario("moeda-conta@example.com");
+        usuarioRepository.persist(usuario);
+        var conta = novaConta(usuario, "Conta em dolar");
+        conta.setMoeda("USD");
+        contaRepository.persist(conta);
+
+        assertThrows(PersistenceException.class, contaRepository::flush);
+    }
+
+    @Test
+    @TestTransaction
+    void rejeitaNovaTransacaoEmContaInativa() {
+        var usuario = novoUsuario("conta-inativa@example.com");
+        usuarioRepository.persist(usuario);
+        var conta = novaConta(usuario, "Conta inativa");
+        conta.setAtivo(false);
+        contaRepository.persist(conta);
+        transacaoRepository.persist(novaTransacao(
+                usuario, conta, TipoTransacao.DESPESA, "10.00", LocalDate.of(2026, 1, 1)));
 
         assertThrows(PersistenceException.class, transacaoRepository::flush);
     }
@@ -261,10 +428,10 @@ class NucleoFinanceiroRepositoryTest {
         transacao.setUsuario(usuario);
         transacao.setConta(conta);
         transacao.setTipo(tipo);
-        transacao.setStatus(StatusTransacao.PLANEJADA);
+        transacao.setSituacao(SituacaoTransacao.PLANEJADA);
         transacao.setDescricao("Lancamento de teste");
         transacao.setValor(new BigDecimal(valor));
-        transacao.setDataVencimento(vencimento);
+        transacao.setDataFinanceira(vencimento);
         return transacao;
     }
 }

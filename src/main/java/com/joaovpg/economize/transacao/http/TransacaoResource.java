@@ -1,12 +1,15 @@
 package com.joaovpg.economize.transacao.http;
 
 import com.joaovpg.economize.transacao.application.CriarTransacao;
+import com.joaovpg.economize.transacao.application.ExcluirTransacao;
 import com.joaovpg.economize.transacao.http.dto.request.CriarTransacaoRequest;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -18,11 +21,14 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 @Produces(MediaType.APPLICATION_JSON)
 public class TransacaoResource {
     private final CriarTransacao criarTransacao;
+    private final ExcluirTransacao excluirTransacao;
     private final TransacaoHttpMapper mapper;
     private final JsonWebToken token;
 
-    public TransacaoResource(CriarTransacao criarTransacao, TransacaoHttpMapper mapper, JsonWebToken token) {
+    public TransacaoResource(CriarTransacao criarTransacao, ExcluirTransacao excluirTransacao,
+                             TransacaoHttpMapper mapper, JsonWebToken token) {
         this.criarTransacao = criarTransacao;
+        this.excluirTransacao = excluirTransacao;
         this.mapper = mapper;
         this.token = token;
     }
@@ -34,5 +40,13 @@ public class TransacaoResource {
         var resultado = criarTransacao.executar(comando);
         var response = mapper.toResponse(resultado);
         return Response.status(Response.Status.CREATED).entity(response).build();
+    }
+
+    @DELETE
+    @Path("/{id}")
+    @RolesAllowed("usuario")
+    public Response excluir(@PathParam("id") UUID id) {
+        excluirTransacao.executar(UUID.fromString(token.getSubject()), id);
+        return Response.noContent().build();
     }
 }

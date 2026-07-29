@@ -23,3 +23,15 @@ Uma Transacao, lado de Transferencia ou ocorrencia materializada nao pode ter da
 Contas podem ser ativadas e inativadas repetidamente. A inativacao nao cancela nem altera Transacoes ou Transferencias em cascata e nao e impedida pela existencia de operacoes planejadas. Enquanto inativa, a conta nao admite novas operacoes financeiras, mas operacoes existentes continuam disponiveis para consulta, edicao, mudanca de situacao e exclusao conforme seus proprios ciclos de vida. Esta regra foi revisada por [Definir o ciclo de vida das transferencias](04-definir-ciclo-vida-transferencias.md).
 
 O marco esta concluido quando os quatro fluxos possuem contrato HTTP, casos de uso, isolamento por proprietario, invariantes protegidas na aplicacao e no banco quando aplicavel e testes de integracao. Consultas de Transacoes e calculo de saldo pertencem ao marco dependente.
+
+## Comments
+
+### 2026-07-28 - Detalhamento e implementacao do marco
+
+- A situacao permanece na edicao geral por `PUT /contas/{contaId}`; cadastro e listagem usam `POST /contas` e `GET /contas`.
+- O `PUT` exige a representacao completa. A listagem retorna array direto, aceita filtro opcional por situacao e ordena por nome sem diferenciar caixa com identificador como desempate.
+- `moeda` e obrigatoria e aceita estritamente `BRL`. Valores fora de `NUMERIC(19,4)` sao rejeitados, sem arredondamento ou truncamento.
+- O termo Dados iniciais da conta agrupa moeda, saldo inicial e data do saldo inicial.
+- Os Dados iniciais ficam bloqueados no primeiro uso financeiro, inclusive por fontes de operacoes virtuais, e permanecem bloqueados depois de exclusoes.
+- O bloqueio nao integra a resposta publica. Uma tentativa de alteracao retorna `DADOS_INICIAIS_CONTA_IMUTAVEIS`.
+- A protecao usa validacao na aplicacao e triggers no PostgreSQL. O fluxo existente de criacao de Transacao passou a validar a data contra a data do saldo inicial.

@@ -6,6 +6,8 @@ quarkus:
   hibernate-orm:
     schema-management:
       strategy: validate
+  jackson:
+    fail-on-unknown-properties: true
   smallrye-openapi:
     path: /q/openapi
     store-schema-directory: target/generated-openapi

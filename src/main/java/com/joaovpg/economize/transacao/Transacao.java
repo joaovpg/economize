@@ -52,8 +52,8 @@ public class Transacao extends EntidadeBase {
     private TipoTransacao tipo;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "STR_STATUS", nullable = false, length = 20)
-    private StatusTransacao status;
+    @Column(name = "STR_SITUACAO", nullable = false, length = 20)
+    private SituacaoTransacao situacao;
 
     @Column(name = "STR_DESCRICAO", nullable = false, length = 255)
     private String descricao;
@@ -64,8 +64,8 @@ public class Transacao extends EntidadeBase {
     @Column(name = "DEC_VALOR", nullable = false, precision = 19, scale = 4)
     private BigDecimal valor;
 
-    @Column(name = "DAT_VENCIMENTO", nullable = false)
-    private LocalDate dataVencimento;
+    @Column(name = "DAT_FINANCEIRA", nullable = false)
+    private LocalDate dataFinanceira;
 
     @Column(name = "DAT_IDENTIFICADOR_RECORRENCIA")
     private LocalDate identificadorRecorrencia;

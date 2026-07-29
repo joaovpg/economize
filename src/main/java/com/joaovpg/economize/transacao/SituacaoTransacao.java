@@ -1,7 +1,6 @@
 package com.joaovpg.economize.transacao;
 
-public enum StatusTransacao {
+public enum SituacaoTransacao {
     PLANEJADA,
-    EFETIVADA,
-    CANCELADA
+    EFETIVADA
 }

@@ -6,15 +6,18 @@
 - Cadastro de Usuario com inicio imediato de sessao autenticada.
 - Login por e-mail e senha com Argon2 e token JWT.
 - Gestao de Categorias com cadastro, edicao, alteracao de situacao e listagem.
+- Gestao de Contas financeiras com cadastro, edicao, alteracao de situacao e listagem.
 - Criacao de receitas e despesas planejadas sem repeticao.
 
 O schema inicial e o fluxo existente de criacao de Transacoes ainda precisam das adequacoes de ciclo de vida, integridade e contrato descritas nos marcos restantes. A migration inicial compartilhada permanece imutavel; mudancas de schema serao migrations incrementais introduzidas no primeiro marco que necessitar de cada regra.
 
-## MVP restante
+## Marcos do MVP
 
-A numeracao abaixo apresenta o caminho principal. As dependencias explicitas determinam o que pode avancar em paralelo.
+A numeracao abaixo apresenta o caminho principal. Marcos concluidos permanecem registrados para preservar as dependencias e o escopo entregue.
 
 ### 1. Gestao de Contas financeiras
+
+**Estado:** concluido.
 
 #### Objetivo
 
@@ -41,10 +44,11 @@ Permitir que o Usuario mantenha as Contas financeiras usadas por Transacoes, sal
 - O MVP aceita somente `BRL`, preservando a moeda explicita no modelo e no contrato para evolucao futura.
 - O saldo inicial aceita valores positivos, negativos ou zero com precisao monetaria `NUMERIC(19,4)`.
 - A data do saldo inicial deve ser igual ou anterior a data atual no fuso do Usuario.
-- Nome pode ser alterado a qualquer momento. Moeda, saldo inicial e data do saldo inicial somente podem ser alterados enquanto nunca tiver existido uma Transacao na conta.
-- Nenhuma Transacao, lado de Transferencia ou ocorrencia materializada pode ter Data financeira anterior a data do saldo inicial da conta.
+- Nome pode ser alterado a qualquer momento. Os Dados iniciais da conta somente podem ser alterados enquanto nunca tiver existido uma operacao financeira vinculada a conta.
+- O primeiro vinculo com Transacao, lado de Transferencia, Segmento de recorrencia ou Parcelamento bloqueia irreversivelmente os Dados iniciais, mesmo que a operacao seja excluida depois.
+- Nenhuma Transacao, lado de Transferencia, Segmento de recorrencia, ocorrencia materializada ou Parcela pode ter Data financeira anterior a data do saldo inicial da conta.
 - Contas podem ser ativadas e inativadas repetidamente. A inativacao impede novas operacoes, mas nao altera operacoes existentes nem bloqueia sua consulta, correcao, efetivacao, replanejamento ou exclusao conforme o ciclo de vida aplicavel.
-- A unicidade de nome e a restricao de moeda serao protegidas por migration incremental e mapeamento JPA compativel.
+- Unicidade de nome, moeda, bloqueio dos Dados iniciais e datas compativeis sao protegidos pela aplicacao e pela migration incremental correspondente.
 
 #### Concluido quando
 

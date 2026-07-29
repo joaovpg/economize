@@ -38,4 +38,7 @@ public class ContaFinanceira extends EntidadeBase {
 
     @Column(name = "BOL_ATIVO", nullable = false)
     private boolean ativo = true;
+
+    @Column(name = "BOL_DADOS_INICIAIS_BLOQUEADOS", nullable = false, insertable = false, updatable = false)
+    private boolean dadosIniciaisBloqueados;
 }

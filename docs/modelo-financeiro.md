@@ -22,9 +22,17 @@ Os numeros de tabela sao permanentes e nao devem ser reutilizados. Identificador
 
 ## Saldos e transacoes
 
-O saldo atual nao e armazenado. Ele e calculado a partir do saldo inicial da conta e das transacoes efetivadas desde `DAT_SALDO_INICIAL`. Valores de transacoes sao sempre positivos; o tipo determina se o valor entra ou sai da conta. Transacoes canceladas nao participam do saldo e ficam fora das consultas por padrao.
+O saldo atual nao e armazenado. Ele e calculado a partir do saldo inicial da conta e das transacoes efetivadas desde `DAT_SALDO_INICIAL`. Valores de transacoes sao sempre positivos; o tipo determina se o valor entra ou sai da conta. A Situacao de uma Transacao e `PLANEJADA` ou `EFETIVADA`, e sua Data financeira e persistida em `DAT_FINANCEIRA`. Na criacao, uma Transacao planejada nao possui instante de efetivacao. Uma Transacao efetivada exige Data financeira igual ou anterior a data atual no fuso do Usuario e registra separadamente em `DHR_EFETIVACAO` o instante em que foi criada como efetivada.
 
 Contas e categorias podem ser ativadas e inativadas repetidamente sem perder historico. Categorias nao possuem tipo e podem classificar receitas e despesas. Sua hierarquia admite profundidade arbitraria; os casos de uso de categorias detectam ciclos indiretos e verificam que pai e filha pertencem ao mesmo usuario.
+
+## Contas financeiras
+
+Uma Conta financeira pertence a um Usuario e possui nome, moeda, saldo inicial, data do saldo inicial e situacao. O nome e armazenado sem espacos nas extremidades e e unico por Usuario sem diferenciar caixa, inclusive entre contas inativas. O MVP aceita somente `BRL` e representa o saldo inicial em `NUMERIC(19,4)`, permitindo valores positivos, negativos ou zero.
+
+Moeda, saldo inicial e data do saldo inicial formam os Dados iniciais da conta. Eles ficam irreversivelmente bloqueados no primeiro vinculo com uma operacao financeira persistida ou com uma fonte de operacoes virtuais. Transacoes e lados de Transferencias acionam o bloqueio por meio de `TB006_TRANSACAO`; Segmentos de recorrencia e futuros Parcelamentos o acionam pela estrutura que projeta suas ocorrencias. Excluir posteriormente essas operacoes nao libera os Dados iniciais.
+
+A data de uma Transacao ou o inicio de um Segmento nao pode anteceder a data do saldo inicial. Novas associacoes exigem Conta financeira ativa; a inativacao nao altera nem impede a manutencao das operacoes que ja estavam associadas.
 
 Categorias sao cadastradas ativas. Nome e unico sem diferenciar caixa entre categorias irmas, inclusive entre categorias raiz e independentemente da situacao. Uma categoria so pode ser cadastrada ou movida para um pai ativo. A ativacao exige todos os ancestrais ativos, enquanto a inativacao exige que nao existam descendentes ativos. Edicoes podem alterar dados, posicao e situacao atomicamente e nunca podem formar ciclos.
 
@@ -38,8 +46,8 @@ Editar somente uma ocorrencia a transforma em excecao: ela permanece no grupo, m
 
 Uma transferencia possui dois lancamentos: saida na conta de origem e entrada na conta de destino. Data, valor e descricao pertencem a operacao logica e devem ser alterados atomicamente por um futuro servico. Os lancamentos vinculados nao podem ser editados isoladamente.
 
-No MVP, as contas devem pertencer ao mesmo usuario, ser diferentes, estar ativas e usar a mesma moeda. Transferencias planejadas podem ser canceladas. Uma transferencia efetivada e revertida por outra transferencia inversa, preservando o historico.
+No MVP, as contas devem pertencer ao mesmo usuario, ser diferentes, estar ativas e usar a mesma moeda. O ciclo de vida e as operacoes atomicas de Transferencias serao definidos no marco correspondente. O modelo atual nao oferece cancelamento ou estorno de Transacoes simples. Receitas e despesas simples, planejadas ou efetivadas, podem ser excluidas fisica e definitivamente; a exclusao nao libera os Dados iniciais da Conta financeira.
 
 ## Limites desta entrega
 
-Esta entrega fornece migrations, entidades, repositorios, constraints estruturais, cadastro de usuario, autenticacao JWT, gestao de categorias e criacao de receitas e despesas planejadas. Gestao completa de usuarios e contas, demais operacoes de transacao, calculo de saldo, operacoes atomicas de transferencia e expansao ou edicao de recorrencias permanecem para os proximos marcos.
+Esta entrega fornece migrations, entidades, repositorios, constraints estruturais, cadastro de usuario, autenticacao JWT, gestao de categorias, gestao de Contas financeiras e criacao e exclusao definitiva de receitas e despesas planejadas ou efetivadas com Situacao explicita e Data financeira canonica. Gestao completa de usuarios, alteracao de transacoes, calculo de saldo, operacoes atomicas de transferencia e expansao ou edicao de recorrencias permanecem para os proximos marcos.
