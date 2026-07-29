@@ -22,7 +22,9 @@ Os numeros de tabela sao permanentes e nao devem ser reutilizados. Identificador
 
 ## Saldos e transacoes
 
-O saldo atual nao e armazenado. Ele e calculado a partir do saldo inicial da conta e das transacoes efetivadas desde `DAT_SALDO_INICIAL`. Valores de transacoes sao sempre positivos; o tipo determina se o valor entra ou sai da conta. A Situacao de uma Transacao e `PLANEJADA` ou `EFETIVADA`, e sua Data financeira e persistida em `DAT_FINANCEIRA`. Na criacao, uma Transacao planejada nao possui instante de efetivacao. Uma Transacao efetivada exige Data financeira igual ou anterior a data atual no fuso do Usuario e registra separadamente em `DHR_EFETIVACAO` o instante em que foi criada como efetivada.
+O saldo atual nao e armazenado. Ele e calculado a partir do saldo inicial da conta e das transacoes efetivadas desde `DAT_SALDO_INICIAL`. Valores de transacoes sao sempre positivos; o tipo determina se o valor entra ou sai da conta. A Situacao de uma Transacao e `PLANEJADA` ou `EFETIVADA`, e sua Data financeira e persistida em `DAT_FINANCEIRA`. Uma Transacao planejada nao possui instante de efetivacao. Uma Transacao efetivada exige Data financeira igual ou anterior a data atual no fuso do Usuario e registra separadamente em `DHR_EFETIVACAO` o instante em que foi efetivada.
+
+Receitas e despesas simples podem substituir atomicamente Situacao, Conta financeira, Categoria, tipo, descricao, observacoes, valor e Data financeira. Efetivar uma planejada registra um novo instante; corrigir uma efetivada preserva esse instante; replanejar o limpa. Uma Conta financeira ou Categoria inativada depois da associacao pode ser mantida, mas uma nova associacao exige recurso ativo do mesmo Usuario. A movimentacao para outra Conta financeira tambem exige a mesma moeda e Data financeira compativel com o saldo inicial.
 
 Contas e categorias podem ser ativadas e inativadas repetidamente sem perder historico. Categorias nao possuem tipo e podem classificar receitas e despesas. Sua hierarquia admite profundidade arbitraria; os casos de uso de categorias detectam ciclos indiretos e verificam que pai e filha pertencem ao mesmo usuario.
 
@@ -50,4 +52,4 @@ No MVP, as contas devem pertencer ao mesmo usuario, ser diferentes, estar ativas
 
 ## Limites desta entrega
 
-Esta entrega fornece migrations, entidades, repositorios, constraints estruturais, cadastro de usuario, autenticacao JWT, gestao de categorias, gestao de Contas financeiras e criacao e exclusao definitiva de receitas e despesas planejadas ou efetivadas com Situacao explicita e Data financeira canonica. Gestao completa de usuarios, alteracao de transacoes, calculo de saldo, operacoes atomicas de transferencia e expansao ou edicao de recorrencias permanecem para os proximos marcos.
+Esta entrega fornece migrations, entidades, repositorios, constraints estruturais, cadastro de usuario, autenticacao JWT, gestao de categorias, gestao de Contas financeiras e o ciclo completo de receitas e despesas simples planejadas ou efetivadas: criacao, alteracao, transicoes e exclusao definitiva. Gestao completa de usuarios, consultas e calculo de saldo, operacoes atomicas de transferencia e expansao ou edicao de recorrencias permanecem para os proximos marcos.

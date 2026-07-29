@@ -5,7 +5,7 @@
 Backend de um sistema pessoal para registrar e catalogar receitas, despesas, transferências e recorrências financeiras.
 
 > [!IMPORTANT]
-> O projeto está em desenvolvimento. A entrega atual implementa o núcleo de persistência, cadastro e autenticação JWT de usuários e a criação de transações planejadas.
+> O projeto está em desenvolvimento. A entrega atual implementa o núcleo de persistência, cadastro e autenticação JWT de usuários, gestão de contas e categorias e o ciclo completo de transações simples.
 
 ## Estado atual
 
@@ -15,10 +15,11 @@ O repositório contém:
 - entidades JPA e repositórios Panache para usuários, contas, categorias, recorrências, transações e transferências;
 - constraints e uma trigger diferida para proteger invariantes financeiras;
 - testes de integração da persistência com banco real via Quarkus Dev Services;
-- cadastro público, login com e-mail e senha, emissão de JWT e criação autenticada de receitas e despesas planejadas;
+- cadastro público, login com e-mail e senha e emissão de JWT;
+- gestão autenticada de contas financeiras, categorias e receitas ou despesas simples planejadas e efetivadas, incluindo alteração, transições e exclusão definitiva;
 - infraestrutura REST e OpenAPI configurada, além de dependências planejadas para mapeamentos, integrações e métricas.
 
-O próximo marco continua o CRUD do MVP com gestão de contas e categorias e demais operações de transações. Consulte o [roadmap](docs/roadmap.md) para todas as entregas planejadas.
+O próximo marco implementa consultas mensais de Transações e cálculo de saldos derivados. Consulte o [roadmap](docs/roadmap.md) para todas as entregas planejadas.
 
 ## Modelo financeiro
 

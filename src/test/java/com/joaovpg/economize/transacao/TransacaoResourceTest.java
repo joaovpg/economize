@@ -6,6 +6,9 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.matchesPattern;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.joaovpg.economize.categoria.Categoria;
 import com.joaovpg.economize.categoria.CategoriaRepository;
@@ -24,13 +27,14 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
-class CriarTransacaoResourceTest {
+class TransacaoResourceTest {
     private static final ZoneId FUSO_USUARIO = ZoneId.of("Pacific/Pago_Pago");
     private static final ZoneId FUSO_OUTRO_USUARIO = ZoneId.of("Pacific/Kiritimati");
 
@@ -44,6 +48,7 @@ class CriarTransacaoResourceTest {
     private String emailOutroUsuario;
     private UUID contaId;
     private UUID contaInativaId;
+    private UUID contaSecundariaId;
     private UUID contaOutroUsuarioId;
     private UUID categoriaId;
     private UUID categoriaInativaId;
@@ -79,11 +84,20 @@ class CriarTransacaoResourceTest {
         contaInativa.setAtivo(false);
         contaRepository.persist(contaInativa);
 
+        var contaSecundaria = new ContaFinanceira();
+        contaSecundaria.setUsuario(usuario);
+        contaSecundaria.setNome("Conta secundaria");
+        contaSecundaria.setMoeda("BRL");
+        contaSecundaria.setSaldoInicial(BigDecimal.ZERO);
+        contaSecundaria.setDataSaldoInicial(LocalDate.of(2026, 2, 1));
+        contaRepository.persist(contaSecundaria);
+
         var categoria = novaCategoria(usuario, "Alimentacao", true);
         var categoriaInativa = novaCategoria(usuario, "Arquivada", false);
         contaRepository.flush();
         contaId = conta.getId();
         contaInativaId = contaInativa.getId();
+        contaSecundariaId = contaSecundaria.getId();
         categoriaId = categoria.getId();
         categoriaInativaId = categoriaInativa.getId();
 
@@ -488,6 +502,223 @@ class CriarTransacaoResourceTest {
                 .then().statusCode(401);
     }
 
+    @Test
+    void alteraTodosOsCamposMutaveisEEfetivaTransacao() {
+        var token = autenticar();
+        var transacaoId = criarTransacao(token, "2026-07-26").statusCode(201)
+                .extract().jsonPath().getUUID("id");
+        var hoje = LocalDate.now(FUSO_USUARIO);
+
+        alterarTransacao(token, transacaoId, contaSecundariaId, categoriaId, "EFETIVADA", "RECEITA",
+                "  Salario corrigido  ", "  Observacao corrigida  ", "987.6543", hoje)
+                .statusCode(200)
+                .body("id", equalTo(transacaoId.toString()))
+                .body("contaId", equalTo(contaSecundariaId.toString()))
+                .body("categoriaId", equalTo(categoriaId.toString()))
+                .body("situacao", equalTo("EFETIVADA"))
+                .body("tipo", equalTo("RECEITA"))
+                .body("descricao", equalTo("Salario corrigido"))
+                .body("observacoes", equalTo("Observacao corrigida"))
+                .body("valor", equalTo(987.6543F))
+                .body("dataFinanceira", equalTo(hoje.toString()))
+                .body("efetivadoEm", notNullValue());
+    }
+
+    @Test
+    void preservaInstanteAoCorrigirTransacaoQuePermaneceEfetivada() {
+        var token = autenticar();
+        var ontem = LocalDate.now(FUSO_USUARIO).minusDays(1);
+        var respostaCriacao = criarTransacaoEfetivada(token, "DESPESA", ontem, categoriaId)
+                .statusCode(201).extract();
+        var transacaoId = respostaCriacao.jsonPath().getUUID("id");
+        var efetivadoEmOriginal = QuarkusTransaction.requiringNew().call(() ->
+                transacaoRepository.findById(transacaoId).getEfetivadoEm());
+
+        var respostaAlteracao = alterarTransacao(token, transacaoId, contaId, categoriaId, "EFETIVADA", "DESPESA",
+                "Descricao corrigida", null, "20.0000", ontem.minusDays(1))
+                .statusCode(200).extract();
+
+        assertEquals(efetivadoEmOriginal,
+                Instant.parse(respostaAlteracao.jsonPath().getString("efetivadoEm")));
+    }
+
+    @Test
+    void replanejaLimpaInstanteENovaEfetivacaoRegistraOutro() {
+        var token = autenticar();
+        var hoje = LocalDate.now(FUSO_USUARIO);
+        var respostaCriacao = criarTransacaoEfetivada(token, "DESPESA", hoje, null)
+                .statusCode(201).extract();
+        var transacaoId = respostaCriacao.jsonPath().getUUID("id");
+        var efetivadoEmOriginal = QuarkusTransaction.requiringNew().call(() ->
+                transacaoRepository.findById(transacaoId).getEfetivadoEm());
+
+        alterarTransacao(token, transacaoId, contaId, null, "PLANEJADA", "DESPESA",
+                "Replanejada", null, "10.0000", hoje.plusDays(1))
+                .statusCode(200)
+                .body("efetivadoEm", nullValue());
+        alterarTransacao(token, transacaoId, contaId, null, "EFETIVADA", "DESPESA",
+                "Efetivada novamente", null, "10.0000", hoje)
+                .statusCode(200)
+                .body("efetivadoEm", notNullValue());
+
+        QuarkusTransaction.requiringNew().run(() ->
+                assertNotEquals(efetivadoEmOriginal, transacaoRepository.findById(transacaoId).getEfetivadoEm()));
+    }
+
+    @Test
+    void permiteManterContaECategoriaQueForamInativadas() {
+        var token = autenticar();
+        var transacaoId = criarTransacaoEfetivada(token, "DESPESA", LocalDate.now(FUSO_USUARIO), categoriaId)
+                .statusCode(201).extract().jsonPath().getUUID("id");
+        QuarkusTransaction.requiringNew().run(() -> {
+            contaRepository.findById(contaId).setAtivo(false);
+            categoriaRepository.findById(categoriaId).setAtivo(false);
+        });
+
+        alterarTransacao(token, transacaoId, contaId, categoriaId, "EFETIVADA", "RECEITA",
+                "Correcao historica", null, "15.0000", LocalDate.now(FUSO_USUARIO))
+                .statusCode(200)
+                .body("contaId", equalTo(contaId.toString()))
+                .body("categoriaId", equalTo(categoriaId.toString()));
+    }
+
+    @Test
+    void rejeitaNovasAssociacoesInativasEPreservaEstadoAnterior() {
+        var token = autenticar();
+        var transacaoId = criarTransacao(token, "2026-07-26").statusCode(201)
+                .extract().jsonPath().getUUID("id");
+
+        alterarTransacao(token, transacaoId, contaInativaId, categoriaInativaId, "EFETIVADA", "RECEITA",
+                "Nao deve persistir", "Falha atomica", "99.0000", LocalDate.now(FUSO_USUARIO))
+                .statusCode(404)
+                .body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+
+        QuarkusTransaction.requiringNew().run(() -> {
+            var transacao = transacaoRepository.findById(transacaoId);
+            assertEquals(contaId, transacao.getConta().getId());
+            assertNull(transacao.getCategoria());
+            assertEquals(SituacaoTransacao.PLANEJADA, transacao.getSituacao());
+            assertEquals(TipoTransacao.DESPESA, transacao.getTipo());
+            assertEquals("Mercado", transacao.getDescricao());
+            assertEquals(new BigDecimal("10.0000"), transacao.getValor());
+        });
+    }
+
+    @Test
+    void rejeitaDataFuturaAoEfetivarEDataAnteriorAoSaldoDaNovaConta() {
+        var token = autenticar();
+        var transacaoId = criarTransacao(token, "2026-07-26").statusCode(201)
+                .extract().jsonPath().getUUID("id");
+
+        alterarTransacao(token, transacaoId, contaId, null, "EFETIVADA", "DESPESA",
+                "Futura", null, "10.0000", LocalDate.now(FUSO_USUARIO).plusDays(1))
+                .statusCode(422).body("codigo", equalTo("DATA_FINANCEIRA_FUTURA"));
+        alterarTransacao(token, transacaoId, contaSecundariaId, null, "PLANEJADA", "DESPESA",
+                "Anterior", null, "10.0000", LocalDate.of(2026, 1, 31))
+                .statusCode(422).body("codigo", equalTo("DATA_FINANCEIRA_ANTERIOR_SALDO_INICIAL"));
+    }
+
+    @Test
+    void ocultaTransacaoAlheiaERejeitaTransacaoVinculadaNaAlteracao() {
+        var tokenOutroUsuario = autenticarOutroUsuario();
+        var transacaoAlheiaId = criarTransacaoEfetivada(tokenOutroUsuario, contaOutroUsuarioId, "RECEITA",
+                LocalDate.now(FUSO_OUTRO_USUARIO), categoriaOutroUsuarioId)
+                .statusCode(201).extract().jsonPath().getUUID("id");
+        alterarTransacao(autenticar(), transacaoAlheiaId, contaId, null, "PLANEJADA", "DESPESA",
+                "Oculta", null, "10.0000", LocalDate.now(FUSO_USUARIO))
+                .statusCode(404).body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+
+        var token = autenticar();
+        var vinculadaId = criarTransacao(token, "2026-07-26").statusCode(201)
+                .extract().jsonPath().getUUID("id");
+        QuarkusTransaction.requiringNew().run(() ->
+                transacaoRepository.findById(vinculadaId).setTipo(TipoTransacao.TRANSFERENCIA));
+        alterarTransacao(token, vinculadaId, contaId, null, "PLANEJADA", "DESPESA",
+                "Vinculada", null, "10.0000", LocalDate.now(FUSO_USUARIO))
+                .statusCode(422).body("codigo", equalTo("TRANSACAO_NAO_SIMPLES"));
+    }
+
+    @Test
+    void rejeitaTipoTransferenciaEExigeEstadoCompletoNaAlteracao() {
+        var token = autenticar();
+        var transacaoId = criarTransacao(token, "2026-07-26").statusCode(201)
+                .extract().jsonPath().getUUID("id");
+
+        alterarTransacao(token, transacaoId, contaId, null, "PLANEJADA", "TRANSFERENCIA",
+                "Transferencia", null, "10.0000", LocalDate.now(FUSO_USUARIO))
+                .statusCode(422).body("codigo", equalTo("TIPO_TRANSACAO_INVALIDO"));
+        given().auth().oauth2(token).contentType("application/json")
+                .body("{\"descricao\":\"Incompleta\"}")
+                .when().put("/api/transacoes/{id}", transacaoId)
+                .then().statusCode(400);
+    }
+
+    @Test
+    void rejeitaRecursosInexistentesOuAlheiosNaAlteracao() {
+        var token = autenticar();
+        var transacaoId = criarTransacao(token, "2026-07-26").statusCode(201)
+                .extract().jsonPath().getUUID("id");
+        var hoje = LocalDate.now(FUSO_USUARIO);
+
+        alterarTransacao(token, transacaoId, UUID.randomUUID(), null, "PLANEJADA", "DESPESA",
+                "Conta inexistente", null, "10.0000", hoje)
+                .statusCode(404).body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+        alterarTransacao(token, transacaoId, contaOutroUsuarioId, null, "PLANEJADA", "DESPESA",
+                "Conta alheia", null, "10.0000", hoje)
+                .statusCode(404).body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+        alterarTransacao(token, transacaoId, contaId, UUID.randomUUID(), "PLANEJADA", "DESPESA",
+                "Categoria inexistente", null, "10.0000", hoje)
+                .statusCode(404).body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+        alterarTransacao(token, transacaoId, contaId, categoriaOutroUsuarioId, "PLANEJADA", "DESPESA",
+                "Categoria alheia", null, "10.0000", hoje)
+                .statusCode(404).body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+    }
+
+    @Test
+    void permiteRemoverCategoriaQueFoiInativada() {
+        var token = autenticar();
+        var transacaoId = criarTransacaoEfetivada(token, "DESPESA", LocalDate.now(FUSO_USUARIO), categoriaId)
+                .statusCode(201).extract().jsonPath().getUUID("id");
+        QuarkusTransaction.requiringNew().run(() -> categoriaRepository.findById(categoriaId).setAtivo(false));
+
+        alterarTransacao(token, transacaoId, contaId, null, "EFETIVADA", "DESPESA",
+                "Sem categoria", null, "10.0000", LocalDate.now(FUSO_USUARIO))
+                .statusCode(200).body("categoriaId", nullValue());
+    }
+
+    @Test
+    void rejeitaAlteracaoDeTransacaoVinculadaARecorrencia() {
+        var token = autenticar();
+        var transacaoId = criarTransacao(token, "2026-07-26").statusCode(201)
+                .extract().jsonPath().getUUID("id");
+        QuarkusTransaction.requiringNew().run(() -> {
+            var transacao = transacaoRepository.findById(transacaoId);
+            var grupo = new GrupoRecorrencia();
+            grupo.setUsuario(transacao.getUsuario());
+            grupo.setDescricao("Recorrencia de teste");
+            grupo.setStatus(StatusRecorrencia.ATIVO);
+            grupoRecorrenciaRepository.persist(grupo);
+            transacao.setGrupoRecorrencia(grupo);
+            transacao.setExcecaoRecorrencia(true);
+        });
+
+        alterarTransacao(token, transacaoId, contaId, null, "PLANEJADA", "DESPESA",
+                "Vinculada", null, "10.0000", LocalDate.now(FUSO_USUARIO))
+                .statusCode(422).body("codigo", equalTo("TRANSACAO_NAO_SIMPLES"));
+    }
+
+    @Test
+    void retornaNaoEncontradoEExigeAutenticacaoParaAlterar() {
+        var hoje = LocalDate.now(FUSO_USUARIO);
+        alterarTransacao(autenticar(), UUID.randomUUID(), contaId, null, "PLANEJADA", "DESPESA",
+                "Inexistente", null, "10.0000", hoje)
+                .statusCode(404).body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+
+        given().contentType("application/json").body("{}")
+                .when().put("/api/transacoes/{id}", UUID.randomUUID())
+                .then().statusCode(401);
+    }
+
     private io.restassured.response.ValidatableResponse criarTransacao(String token, String dataFinanceira) {
         return given()
                 .auth().oauth2(token)
@@ -510,6 +741,31 @@ class CriarTransacaoResourceTest {
         return given()
                 .auth().oauth2(token)
                 .when().delete("/api/transacoes/{id}", transacaoId)
+                .then();
+    }
+
+    private io.restassured.response.ValidatableResponse alterarTransacao(
+            String token, UUID transacaoId, UUID contaId, UUID categoriaId, String situacao, String tipo,
+            String descricao, String observacoes, String valor, LocalDate dataFinanceira) {
+        var categoria = categoriaId == null ? "null" : "\"" + categoriaId + "\"";
+        var observacoesJson = observacoes == null ? "null" : "\"" + observacoes + "\"";
+        return given()
+                .auth().oauth2(token)
+                .contentType("application/json")
+                .body("""
+                        {
+                          "contaId":"%s",
+                          "categoriaId":%s,
+                          "situacao":"%s",
+                          "tipo":"%s",
+                          "descricao":"%s",
+                          "observacoes":%s,
+                          "valor":%s,
+                          "dataFinanceira":"%s"
+                        }
+                        """.formatted(contaId, categoria, situacao, tipo, descricao, observacoesJson, valor,
+                        dataFinanceira))
+                .when().put("/api/transacoes/{id}", transacaoId)
                 .then();
     }
 

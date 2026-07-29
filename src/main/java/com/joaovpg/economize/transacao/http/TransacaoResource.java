@@ -1,13 +1,16 @@
 package com.joaovpg.economize.transacao.http;
 
+import com.joaovpg.economize.transacao.application.AlterarTransacao;
 import com.joaovpg.economize.transacao.application.CriarTransacao;
 import com.joaovpg.economize.transacao.application.ExcluirTransacao;
+import com.joaovpg.economize.transacao.http.dto.request.AlterarTransacaoRequest;
 import com.joaovpg.economize.transacao.http.dto.request.CriarTransacaoRequest;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -21,16 +24,28 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 @Produces(MediaType.APPLICATION_JSON)
 public class TransacaoResource {
     private final CriarTransacao criarTransacao;
+    private final AlterarTransacao alterarTransacao;
     private final ExcluirTransacao excluirTransacao;
     private final TransacaoHttpMapper mapper;
     private final JsonWebToken token;
 
-    public TransacaoResource(CriarTransacao criarTransacao, ExcluirTransacao excluirTransacao,
+    public TransacaoResource(CriarTransacao criarTransacao, AlterarTransacao alterarTransacao,
+                             ExcluirTransacao excluirTransacao,
                              TransacaoHttpMapper mapper, JsonWebToken token) {
         this.criarTransacao = criarTransacao;
+        this.alterarTransacao = alterarTransacao;
         this.excluirTransacao = excluirTransacao;
         this.mapper = mapper;
         this.token = token;
+    }
+
+    @PUT
+    @Path("/{id}")
+    @RolesAllowed("usuario")
+    public Response alterar(@PathParam("id") UUID id, @Valid AlterarTransacaoRequest request) {
+        var comando = mapper.toCommand(UUID.fromString(token.getSubject()), request);
+        var resultado = alterarTransacao.executar(id, comando);
+        return Response.ok(mapper.toResponse(resultado)).build();
     }
 
     @POST

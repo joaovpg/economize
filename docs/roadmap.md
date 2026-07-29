@@ -7,7 +7,7 @@
 - Login por e-mail e senha com Argon2 e token JWT.
 - Gestao de Categorias com cadastro, edicao, alteracao de situacao e listagem.
 - Gestao de Contas financeiras com cadastro, edicao, alteracao de situacao e listagem.
-- Criacao de receitas e despesas planejadas sem repeticao.
+- Gestao de Transacoes simples, com criacao planejada ou efetivada, alteracao, transicoes e exclusao definitiva.
 
 O schema inicial e o fluxo existente de criacao de Transacoes ainda precisam das adequacoes de ciclo de vida, integridade e contrato descritas nos marcos restantes. A migration inicial compartilhada permanece imutavel; mudancas de schema serao migrations incrementais introduzidas no primeiro marco que necessitar de cada regra.
 
@@ -58,6 +58,8 @@ Permitir que o Usuario mantenha as Contas financeiras usadas por Transacoes, sal
 - Documentacao e descricao do estado implementado refletem a entrega.
 
 ### 2. Gestao de Transacoes simples
+
+**Estado:** concluido.
 
 #### Objetivo
 
@@ -277,7 +279,7 @@ Representar planos financeiros finitos compostos por Parcelas numeradas, reutili
 
 O MVP esta concluido somente quando:
 
-- Os seis marcos restantes estiverem concluidos conforme suas dependencias.
+- Todos os marcos do MVP estiverem concluidos conforme suas dependencias.
 - O comportamento entregue estiver refletido no roadmap, no glossario, no modelo financeiro e na apresentacao do projeto.
 - Migrations incrementais, constraints, triggers e mapeamentos JPA estiverem validados contra PostgreSQL sem alterar a migration inicial compartilhada.
 - Todos os recursos estiverem isolados pelo Usuario autenticado e nao revelarem a existencia de dados alheios.
