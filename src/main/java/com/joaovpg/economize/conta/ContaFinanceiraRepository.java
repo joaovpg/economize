@@ -6,6 +6,7 @@ import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Set;
 
 @ApplicationScoped
 public class ContaFinanceiraRepository implements PanacheRepositoryBase<ContaFinanceira, UUID> {
@@ -30,6 +31,10 @@ public class ContaFinanceiraRepository implements PanacheRepositoryBase<ContaFin
 
     public List<ContaFinanceira> listarDoUsuario(UUID usuarioId) {
         return list("usuario.id = ?1 order by lower(nome), id", usuarioId);
+    }
+
+    public List<ContaFinanceira> listarDoUsuario(UUID usuarioId, Set<UUID> contaIds) {
+        return list("usuario.id = ?1 and id in ?2 order by lower(nome), id", usuarioId, contaIds);
     }
 
     public List<ContaFinanceira> listarDoUsuario(UUID usuarioId, SituacaoConta situacao) {

@@ -11,9 +11,11 @@
 - **Situacao da categoria**: disponibilidade de uma Categoria, representada por `ATIVA` ou `INATIVA`.
 - **Transacao**: registro financeiro de receita, despesa ou lado interno de uma transferencia.
 - **Transacao simples**: receita ou despesa sem vinculo com Transferencia, Grupo de recorrencia, Segmento de recorrencia ou Parcelamento, mantida diretamente pelo modulo de Transacoes.
-- **Situacao da transacao**: condicao de uma Transacao simples, representada no MVP por `PLANEJADA` ou `EFETIVADA`.
+- **Situacao da transacao**: controle operacional de uma Transacao simples, representado no MVP por `PLANEJADA` ou `EFETIVADA`; ambas as situacoes produzem o mesmo impacto nos saldos derivados.
 - **Data financeira**: data civil que posiciona uma Transacao na linha do tempo financeira, independentemente do instante em que ela foi efetivada.
 - **Instante de efetivacao**: instante em que uma Transacao passou para `EFETIVADA`; e preservado em correcoes enquanto ela permanece efetivada e limpo ao replanejar.
+- **Saldo de abertura**: saldo consolidado no dia anterior ao primeiro mes consultado, derivado dos saldos iniciais ja vigentes e de todas as Transacoes anteriores atendidas pelos filtros de Conta financeira e Categoria.
+- **Item de saldo inicial**: entrada da linha do tempo que representa o inicio de uma Conta financeira com saldo inicial diferente de zero dentro do periodo consultado; nao e uma Transacao.
 - **Transferencia**: operacao atomica que vincula uma saida e uma entrada entre contas.
 - **Situacao da transferencia**: condicao compartilhada pela Transferencia e suas duas Transacoes, representada no MVP por `PLANEJADA` ou `EFETIVADA`.
 - **Grupo de recorrencia**: origem comum preservada para segmentos e excecoes recorrentes.

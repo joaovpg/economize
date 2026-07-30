@@ -23,12 +23,15 @@ public class CadastrarCategoria {
     public CategoriaResultado executar(Comando comando) {
         var nome = CategoriaValidation.nome(comando.nome());
         var cor = CategoriaValidation.cor(comando.cor());
+
         var usuario = usuarioRepository.findByIdOptional(comando.usuarioId())
                 .filter(candidato -> candidato.getStatus() == StatusUsuario.ATIVO)
                 .orElseThrow(CadastrarCategoria::naoEncontrada);
+
         Categoria pai = comando.categoriaPaiId() == null ? null : categoriaRepository
                 .buscarAtivaDoUsuario(comando.categoriaPaiId(), comando.usuarioId())
                 .orElseThrow(CadastrarCategoria::naoEncontrada);
+
         CategoriaValidation.nomeDisponivel(
                 categoriaRepository, comando.usuarioId(), comando.categoriaPaiId(), nome, null);
 

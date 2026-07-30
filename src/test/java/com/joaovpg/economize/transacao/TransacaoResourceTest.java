@@ -1,11 +1,17 @@
 package com.joaovpg.economize.transacao;
 
 import static io.restassured.RestAssured.given;
+import static io.restassured.config.JsonConfig.jsonConfig;
+import static io.restassured.config.RestAssuredConfig.config;
+import static io.restassured.path.json.config.JsonPathConfig.NumberReturnType.BIG_DECIMAL;
 import static org.hamcrest.Matchers.anEmptyMap;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -21,6 +27,7 @@ import com.joaovpg.economize.usuario.StatusUsuario;
 import com.joaovpg.economize.usuario.Usuario;
 import com.joaovpg.economize.usuario.UsuarioRepository;
 import de.mkammerer.argon2.Argon2Factory;
+import io.restassured.specification.RequestSpecification;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import jakarta.inject.Inject;
@@ -88,7 +95,7 @@ class TransacaoResourceTest {
         contaSecundaria.setUsuario(usuario);
         contaSecundaria.setNome("Conta secundaria");
         contaSecundaria.setMoeda("BRL");
-        contaSecundaria.setSaldoInicial(BigDecimal.ZERO);
+        contaSecundaria.setSaldoInicial(new BigDecimal("75.0000"));
         contaSecundaria.setDataSaldoInicial(LocalDate.of(2026, 2, 1));
         contaRepository.persist(contaSecundaria);
 
@@ -717,6 +724,273 @@ class TransacaoResourceTest {
         given().contentType("application/json").body("{}")
                 .when().put("/api/transacoes/{id}", UUID.randomUUID())
                 .then().statusCode(401);
+    }
+
+    @Test
+    void consultaIntervaloMensalComSaldoDeAberturaEItemDeSaldoInicial() {
+        prepararCenarioConsulta();
+
+        requisicaoConsulta(autenticar())
+                .queryParam("inicio", "2026-02")
+                .queryParam("fim", "2026-02")
+                .when().get("/api/transacoes")
+                .then().statusCode(200)
+                .body("inicio", equalTo("2026-02"))
+                .body("fim", equalTo("2026-02"))
+                .body("saldoAbertura", equalTo(new BigDecimal("50.0000")))
+                .body("itens", hasSize(1))
+                .body("itens[0].origem", equalTo("SALDO_INICIAL_CONTA"))
+                .body("itens[0].operacaoId", equalTo(contaSecundariaId.toString()))
+                .body("itens[0].tipo", equalTo("RECEITA"))
+                .body("itens[0].situacao", nullValue())
+                .body("itens[0].descricao", equalTo("Saldo inicial"))
+                .body("itens[0].valor", equalTo(new BigDecimal("75.0000")))
+                .body("itens[0].dataFinanceira", equalTo("2026-02-01"))
+                .body("itens[0].contaId", equalTo(contaSecundariaId.toString()))
+                .body("$", not(hasKey("modoSaldo")))
+                .body("$", not(hasKey("saldos")))
+                .body("$", not(hasKey("consolidado")));
+    }
+
+    @Test
+    void retornaTodasAsSituacoesDoIntervalo() {
+        prepararCenarioConsulta();
+
+        requisicaoConsulta(autenticar())
+                .queryParam("inicio", "2026-01")
+                .queryParam("fim", "2026-01")
+                .queryParam("contaId", contaId)
+                .when().get("/api/transacoes")
+                .then().statusCode(200)
+                .body("saldoAbertura", equalTo(new BigDecimal("0.0000")))
+                .body("itens", hasSize(4))
+                .body("itens[0].origem", equalTo("SALDO_INICIAL_CONTA"))
+                .body("itens[1].descricao", equalTo("Receita efetivada"))
+                .body("itens[2].descricao", equalTo("Despesa efetivada"))
+                .body("itens[3].descricao", equalTo("Despesa planejada"))
+                .body("itens[3].situacao", equalTo("PLANEJADA"));
+    }
+
+    @Test
+    void aplicaFiltrosDeContaECategoriaAoSaldoDeAbertura() {
+        prepararCenarioConsulta();
+
+        requisicaoConsulta(autenticar())
+                .queryParam("inicio", "2026-02")
+                .queryParam("fim", "2026-02")
+                .queryParam("contaId", contaId)
+                .queryParam("categoriaId", categoriaId)
+                .when().get("/api/transacoes")
+                .then().statusCode(200)
+                .body("saldoAbertura", equalTo(new BigDecimal("90.0000")))
+                .body("itens", hasSize(0));
+    }
+
+    @Test
+    void ordenaSaldoInicialAntesDasTransacoesERepresentaValorNegativoComoDespesa() {
+        QuarkusTransaction.requiringNew().run(() -> {
+            var conta = contaRepository.findById(contaSecundariaId);
+            conta.setSaldoInicial(new BigDecimal("-75.0000"));
+            contaRepository.flush();
+            persistirTransacao(conta, null, TipoTransacao.DESPESA, SituacaoTransacao.PLANEJADA,
+                    "10.0000", LocalDate.of(2026, 2, 1), "Movimento no inicio da conta");
+        });
+
+        requisicaoConsulta(autenticar())
+                .queryParam("inicio", "2026-02")
+                .queryParam("fim", "2026-02")
+                .queryParam("contaId", contaSecundariaId)
+                .when().get("/api/transacoes")
+                .then().statusCode(200)
+                .body("itens", hasSize(2))
+                .body("itens[0].origem", equalTo("SALDO_INICIAL_CONTA"))
+                .body("itens[0].tipo", equalTo("DESPESA"))
+                .body("itens[0].valor", equalTo(new BigDecimal("75.0000")))
+                .body("itens[1].descricao", equalTo("Movimento no inicio da conta"));
+    }
+
+    @Test
+    void desempataItensDaMesmaDataPeloIdentificador() {
+        var ids = QuarkusTransaction.requiringNew().call(() -> {
+            var conta = contaRepository.findById(contaId);
+            var primeiro = persistirTransacao(conta, null, TipoTransacao.RECEITA, SituacaoTransacao.PLANEJADA,
+                    "10.0000", LocalDate.of(2026, 2, 10), "Primeira inclusao");
+            var segundo = persistirTransacao(conta, null, TipoTransacao.DESPESA, SituacaoTransacao.PLANEJADA,
+                    "5.0000", LocalDate.of(2026, 2, 10), "Segunda inclusao");
+            return new UUID[] {primeiro, segundo};
+        });
+        var primeiroEsperado = ids[0].compareTo(ids[1]) < 0 ? ids[0] : ids[1];
+        var segundoEsperado = primeiroEsperado.equals(ids[0]) ? ids[1] : ids[0];
+
+        requisicaoConsulta(autenticar())
+                .queryParam("inicio", "2026-02")
+                .queryParam("fim", "2026-02")
+                .queryParam("contaId", contaId)
+                .when().get("/api/transacoes")
+                .then().statusCode(200)
+                .body("itens", hasSize(2))
+                .body("itens[0].operacaoId", equalTo(primeiroEsperado.toString()))
+                .body("itens[1].operacaoId", equalTo(segundoEsperado.toString()));
+    }
+
+    @Test
+    void incluiContaInativaNaConsulta() {
+        QuarkusTransaction.requiringNew().run(() ->
+                contaRepository.findById(contaInativaId).setSaldoInicial(new BigDecimal("25.0000")));
+
+        requisicaoConsulta(autenticar())
+                .queryParam("inicio", "2026-01")
+                .queryParam("fim", "2026-01")
+                .queryParam("contaId", contaInativaId)
+                .when().get("/api/transacoes")
+                .then().statusCode(200)
+                .body("itens", hasSize(1))
+                .body("itens[0].origem", equalTo("SALDO_INICIAL_CONTA"))
+                .body("itens[0].valor", equalTo(new BigDecimal("25.0000")));
+    }
+
+    @Test
+    void transacaoExcluidaNaoApareceNosItensNemNoSaldoDeAbertura() {
+        var token = autenticar();
+        var transacaoId = QuarkusTransaction.requiringNew().call(() -> persistirTransacao(
+                contaRepository.findById(contaId), null, TipoTransacao.RECEITA, SituacaoTransacao.PLANEJADA,
+                "500.0000", LocalDate.of(2026, 1, 15), "Transacao excluida"));
+
+        given().auth().oauth2(token)
+                .when().delete("/api/transacoes/{id}", transacaoId)
+                .then().statusCode(204);
+
+        requisicaoConsulta(token)
+                .queryParam("inicio", "2026-01")
+                .queryParam("fim", "2026-01")
+                .queryParam("contaId", contaId)
+                .when().get("/api/transacoes")
+                .then().statusCode(200)
+                .body("itens", hasSize(0));
+
+        requisicaoConsulta(token)
+                .queryParam("inicio", "2026-02")
+                .queryParam("fim", "2026-02")
+                .queryParam("contaId", contaId)
+                .when().get("/api/transacoes")
+                .then().statusCode(200)
+                .body("saldoAbertura", equalTo(new BigDecimal("0.0000")));
+    }
+
+    @Test
+    void validaPeriodoEPropriedadeDosFiltrosDaConsulta() {
+        requisicaoConsulta(autenticar())
+                .when().get("/api/transacoes")
+                .then().statusCode(400)
+                .body("codigo", equalTo("DADOS_INVALIDOS"))
+                .body("campos.periodo", notNullValue());
+
+        requisicaoConsulta(autenticar())
+                .queryParam("inicio", "2026-01")
+                .when().get("/api/transacoes")
+                .then().statusCode(400)
+                .body("codigo", equalTo("DADOS_INVALIDOS"))
+                .body("campos.periodo", notNullValue());
+
+        given().auth().oauth2(autenticar())
+                .queryParam("inicio", "2026-02")
+                .queryParam("fim", "2026-01")
+                .when().get("/api/transacoes")
+                .then().statusCode(400);
+
+        given().auth().oauth2(autenticar())
+                .queryParam("inicio", "2026-01")
+                .queryParam("fim", "2027-01")
+                .when().get("/api/transacoes")
+                .then().statusCode(400);
+
+        given().auth().oauth2(autenticar())
+                .queryParam("inicio", "2026-01")
+                .queryParam("fim", "2026-01")
+                .queryParam("contaId", contaOutroUsuarioId)
+                .when().get("/api/transacoes")
+                .then().statusCode(404)
+                .body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+
+        given().auth().oauth2(autenticar())
+                .queryParam("inicio", "2026-01")
+                .queryParam("fim", "2026-01")
+                .queryParam("categoriaId", categoriaOutroUsuarioId)
+                .when().get("/api/transacoes")
+                .then().statusCode(404);
+
+        given().auth().oauth2(autenticar())
+                .queryParam("inicio", "2026-01")
+                .queryParam("fim", "2026-01")
+                .queryParam("contaId", UUID.randomUUID())
+                .when().get("/api/transacoes")
+                .then().statusCode(404);
+
+        given().auth().oauth2(autenticar())
+                .queryParam("inicio", "data-invalida")
+                .queryParam("fim", "2026-01")
+                .when().get("/api/transacoes")
+                .then().statusCode(400)
+                .body("campos.inicio", equalTo("Valor invalido"));
+    }
+
+    @Test
+    void consultaAteDozeMesesECombinaFiltrosRepetidos() {
+        prepararCenarioConsulta();
+
+        requisicaoConsulta(autenticar())
+                .queryParam("inicio", "2026-01")
+                .queryParam("fim", "2026-12")
+                .queryParam("contaId", contaId)
+                .queryParam("contaId", contaInativaId)
+                .queryParam("categoriaId", categoriaId)
+                .queryParam("categoriaId", categoriaInativaId)
+                .when().get("/api/transacoes")
+                .then().statusCode(200)
+                .body("inicio", equalTo("2026-01"))
+                .body("fim", equalTo("2026-12"))
+                .body("itens", hasSize(3))
+                .body("saldoAbertura", equalTo(new BigDecimal("0.0000")));
+    }
+
+    private void prepararCenarioConsulta() {
+        QuarkusTransaction.requiringNew().run(() -> {
+            var conta = contaRepository.findById(contaId);
+            conta.setSaldoInicial(new BigDecimal("100.0000"));
+            contaRepository.flush();
+            persistirTransacao(conta, categoriaRepository.findById(categoriaId), TipoTransacao.RECEITA,
+                    SituacaoTransacao.EFETIVADA, "20.0000", LocalDate.of(2026, 1, 5), "Receita efetivada");
+            persistirTransacao(conta, categoriaRepository.findById(categoriaId), TipoTransacao.DESPESA,
+                    SituacaoTransacao.EFETIVADA, "30.0000", LocalDate.of(2026, 1, 10), "Despesa efetivada");
+            persistirTransacao(conta, null, TipoTransacao.DESPESA, SituacaoTransacao.PLANEJADA,
+                    "40.0000", LocalDate.of(2026, 1, 20), "Despesa planejada");
+            persistirTransacao(conta, null, TipoTransacao.TRANSFERENCIA, SituacaoTransacao.PLANEJADA,
+                    "999.0000", LocalDate.of(2026, 1, 25), "Transferencia orfa");
+        });
+    }
+
+    private UUID persistirTransacao(ContaFinanceira conta, Categoria categoria, TipoTransacao tipo,
+                                    SituacaoTransacao situacao, String valor, LocalDate data, String descricao) {
+        var transacao = new Transacao();
+        transacao.setUsuario(conta.getUsuario());
+        transacao.setConta(conta);
+        transacao.setCategoria(categoria);
+        transacao.setTipo(tipo);
+        transacao.setSituacao(situacao);
+        transacao.setDescricao(descricao);
+        transacao.setValor(new BigDecimal(valor));
+        transacao.setDataFinanceira(data);
+        if (situacao == SituacaoTransacao.EFETIVADA) {
+            transacao.setEfetivadoEm(Instant.now());
+        }
+        transacaoRepository.persistAndFlush(transacao);
+        return transacao.getId();
+    }
+
+    private RequestSpecification requisicaoConsulta(String token) {
+        return given()
+                .config(config().jsonConfig(jsonConfig().numberReturnType(BIG_DECIMAL)))
+                .auth().oauth2(token);
     }
 
     private io.restassured.response.ValidatableResponse criarTransacao(String token, String dataFinanceira) {

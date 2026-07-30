@@ -53,6 +53,8 @@ class TransacaoMigrationTest {
                             + "' AND INDEXNAME = 'ix006_01_conta_data_financeira'"));
                     assertEquals(1, quantidade(statement, "PG_INDEXES WHERE SCHEMANAME = '" + schema
                             + "' AND INDEXNAME = 'ix006_02_usuario_situacao_data_financeira'"));
+                    assertEquals(1, quantidade(statement, "PG_INDEXES WHERE SCHEMANAME = '" + schema
+                            + "' AND INDEXNAME = 'ix006_03_usuario_data_financeira'"));
                     assertEquals(1, quantidade(statement, "PG_CONSTRAINT WHERE CONNAME = 'ck006_02_situacao'"
                             + " AND CONRELID = 'TB006_TRANSACAO'::REGCLASS"));
 

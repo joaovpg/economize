@@ -44,7 +44,11 @@ public class CategoriaResource {
     @POST
     public Response cadastrar(@Valid CadastrarCategoriaRequest request) {
         var resultado = cadastrarCategoria.executar(mapper.toCommand(usuarioId(), request));
-        return Response.status(Response.Status.CREATED).entity(mapper.toResponse(resultado)).build();
+
+        return Response
+                .status(Response.Status.CREATED)
+                .entity(mapper.toResponse(resultado))
+                .build();
     }
 
     @PUT

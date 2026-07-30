@@ -100,11 +100,13 @@ Completar o ciclo de vida de receitas e despesas sem repeticao, adequando o flux
 - Testes de integracao cobrem os fluxos, transicoes, exclusao fisica e isolamento por Usuario.
 - Modelo financeiro, glossario e descricao do estado implementado refletem o ciclo entregue.
 
-### 3. Consultas de Transacoes e calculo de saldos
+### 3. Consultas de Transacoes e Saldo de abertura
+
+**Estado:** concluido.
 
 #### Objetivo
 
-Oferecer uma linha do tempo mensal unificada e saldos derivados por Conta financeira e consolidados.
+Oferecer uma linha do tempo unificada e o Saldo de abertura necessario para o frontend derivar saldos diarios.
 
 #### Depende de
 
@@ -113,36 +115,35 @@ Oferecer uma linha do tempo mensal unificada e saldos derivados por Conta financ
 
 #### Escopo
 
-- Consultar Transacoes de um periodo opcional dentro de um unico mes civil.
-- Usar o mes civil atual por padrao.
-- Filtrar por uma ou mais Contas financeiras, Categorias e Situacoes da transacao.
+- Consultar Transacoes de um intervalo obrigatorio entre um e doze meses civis inclusivos.
+- Receber os meses inicial e final no formato `yyyy-MM`.
+- Filtrar por uma ou mais Contas financeiras e Categorias exatas.
 - Unificar Transacoes simples, lados de Transferencias e ocorrencias recorrentes ou Parcelas quando esses modulos estiverem disponiveis.
-- Calcular saldo atual e saldo projetado por Conta financeira e consolidado em `BRL`.
+- Calcular o Saldo de abertura consolidado em `BRL` no ultimo dia anterior ao primeiro mes consultado.
 - Nao usar paginacao.
 
 #### Regras criticas e dados
 
-- Inicio e fim sao inclusivos, devem ser fornecidos juntos e pertencer ao mesmo mes civil.
-- A listagem ordena por Data financeira crescente e identificador crescente como desempate deterministico.
-- Sem filtros, a consulta inclui todas as contas, Categorias e situacoes do periodo. Contas inativas continuam consultaveis.
-- Cada item identifica se sua origem e Transacao simples, Transferencia, Recorrencia ou Parcelamento e referencia a operacao relacionada.
-- Consultar expande ocorrencias recorrentes e Parcelas virtuais em memoria, sem grava-las.
-- O saldo atual parte do saldo inicial, soma receitas efetivadas e subtrai despesas efetivadas desde a data do saldo inicial.
-- O saldo projetado inclui Transacoes planejadas e efetivadas, persistidas ou virtuais. Planejadas vencidas participam da projecao.
-- `ACUMULADO`, modo padrao, parte do saldo inicial e considera Transacoes desde a data do saldo inicial ate o fim inclusivo do periodo.
-- `SOMENTE_PERIODO` parte de zero e considera somente Transacoes entre inicio e fim inclusivos, sem saldo inicial nem movimentos anteriores.
-- Os saldos correspondem ao conjunto atendido pelo periodo e pelos filtros e nao dependem da ordenacao da listagem.
-- Os lados de uma Transferencia afetam suas respectivas contas e se anulam no consolidado quando ambas participam do calculo.
-- Saldo atual, saldo projetado e consolidacoes nao sao persistidos.
-- Indices por Usuario, Data financeira, situacao, Conta financeira e Categoria serao definidos conforme as queries reais.
+- Inicio e fim sao obrigatorios, inclusivos, usam granularidade mensal, devem estar em ordem e podem abranger no maximo doze meses.
+- A listagem ordena por Data financeira crescente. Itens de saldo inicial precedem Transacoes do mesmo dia, e o identificador fornece o desempate deterministico.
+- Sem filtros, a consulta inclui todas as Contas financeiras, Categorias e Situacoes do periodo. Contas inativas continuam consultaveis.
+- Cada item identifica se sua origem e saldo inicial de Conta financeira, Transacao simples, Transferencia, Recorrencia ou Parcelamento e referencia a operacao relacionada.
+- A Situacao da transacao e somente um controle operacional. Planejadas e efetivadas aparecem na linha do tempo e produzem o mesmo impacto nas somas.
+- O Saldo de abertura soma os saldos iniciais ja vigentes e todas as Transacoes anteriores ao primeiro mes, respeitando os filtros de Conta financeira e Categoria.
+- O filtro de Categoria seleciona movimentos, mas preserva os saldos iniciais das Contas financeiras selecionadas como base.
+- Uma Conta financeira iniciada dentro do intervalo produz um item `SALDO_INICIAL_CONTA` nessa data, antes das Transacoes do mesmo dia. Saldos iniciais zero nao produzem itens.
+- Consultar expande ocorrencias recorrentes e Parcelas virtuais em memoria, sem grava-las. Ocorrencias anteriores ao intervalo compoem o Saldo de abertura e ocorrencias dentro do intervalo aparecem na linha do tempo.
+- Os lados de uma Transferencia afetam suas respectivas contas e se anulam no Saldo de abertura ou no saldo diario quando ambas participam do calculo.
+- Saldo de abertura e saldos diarios nao sao persistidos.
+- Indices por Usuario, Data financeira, Conta financeira e Categoria serao definidos conforme as queries reais.
 
 #### Concluido quando
 
-- Consulta mensal, filtros e modos de saldo possuem contrato HTTP e casos de uso.
+- Intervalo mensal, filtros e Saldo de abertura possuem contrato HTTP e caso de uso.
 - Resultados persistidos e virtuais formam uma unica listagem deterministica, quando os modulos correspondentes estiverem disponiveis.
-- Saldos por conta e consolidado respeitam Data financeira, situacao, tipo, periodo e filtros.
-- Testes de integracao cobrem limites de periodo, filtros, ordenacao, contas inativas e calculos atuais e projetados.
-- O glossario define saldo atual, saldo projetado, `ACUMULADO` e `SOMENTE_PERIODO`.
+- Saldo de abertura e itens respeitam Data financeira, tipo, periodo e filtros sem distinguir Situacoes da transacao.
+- Testes de integracao cobrem limites de periodo, filtros, ordenacao, contas inativas, Saldo de abertura e itens de saldo inicial.
+- O glossario define Saldo de abertura e Item de saldo inicial.
 
 ### 4. Transferencias simples
 
@@ -154,7 +155,7 @@ Permitir movimentacoes atomicas entre duas Contas financeiras do mesmo Usuario.
 
 - Gestao de Contas financeiras.
 - Gestao de Transacoes simples.
-- Consultas de Transacoes e calculo de saldos.
+- Consultas de Transacoes e Saldo de abertura.
 
 #### Escopo
 
@@ -196,7 +197,7 @@ Validar, persistir e expandir o subconjunto aprovado de repeticao para receitas 
 #### Depende de
 
 - Gestao de Transacoes simples.
-- Consultas de Transacoes e calculo de saldos.
+- Consultas de Transacoes e Saldo de abertura.
 - Nao depende de Transferencias simples e pode avancar em paralelo com esse marco.
 
 #### Escopo
@@ -292,7 +293,7 @@ A ordem abaixo e uma prioridade sugerida, nao uma sequencia estrita. Uma capacid
 
 ### Orcamentos
 
-**Depende de:** MVP concluido, Categorias, consultas de Transacoes e calculo de saldos.
+**Depende de:** MVP concluido, Categorias, consultas de Transacoes e Saldo de abertura.
 
 - Definir limites por Categoria e periodo.
 - Acompanhar realizado e projetado.

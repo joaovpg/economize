@@ -5,6 +5,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import java.util.Optional;
 import java.util.List;
 import java.util.UUID;
+import java.util.Set;
 
 @ApplicationScoped
 public class CategoriaRepository implements PanacheRepositoryBase<Categoria, UUID> {
@@ -14,6 +15,10 @@ public class CategoriaRepository implements PanacheRepositoryBase<Categoria, UUI
 
     public Optional<Categoria> buscarDoUsuario(UUID categoriaId, UUID usuarioId) {
         return find("id = ?1 and usuario.id = ?2", categoriaId, usuarioId).firstResultOptional();
+    }
+
+    public long contarDoUsuario(UUID usuarioId, Set<UUID> categoriaIds) {
+        return count("usuario.id = ?1 and id in ?2", usuarioId, categoriaIds);
     }
 
     public boolean existeComNomeNoMesmoNivel(UUID usuarioId, UUID categoriaPaiId, String nome, UUID ignorarId) {
