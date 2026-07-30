@@ -67,14 +67,62 @@ Consulte [`AGENTS.md`](AGENTS.md) para as regras de arquitetura e implementaçã
 ## Pré-requisitos
 
 - JDK 25 com `JAVA_HOME` configurado;
-- Docker ou outro runtime de contêiner compatível, usado pelo Quarkus Dev Services;
+- Docker com Docker Compose;
 - Git.
 
 Não é necessário instalar Maven separadamente: o repositório inclui o Maven Wrapper.
 
 ## Desenvolvimento local
 
-O Quarkus Dev Services inicia e configura um PostgreSQL em contêiner quando nenhum datasource é fornecido.
+O fluxo local usa o [`docker-compose.yml`](docker-compose.yml) para iniciar o PostgreSQL em `localhost:5432` e o pgAdmin em <http://localhost:5050>. As credenciais declaradas no Compose são destinadas exclusivamente ao desenvolvimento local.
+
+### 1. Configure o ambiente
+
+Copie o arquivo de exemplo para `.env`. O Quarkus carrega automaticamente esse arquivo quando a aplicação é iniciada na raiz do projeto.
+
+Linux e macOS:
+
+```shell
+cp .env.example .env
+```
+
+Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+O `.env.example` já corresponde ao PostgreSQL definido no Compose:
+
+| Variável | Valor local |
+| --- | --- |
+| `DB_URL` | `jdbc:postgresql://localhost:5432/economize_db` |
+| `DB_USERNAME` | `postgres` |
+| `DB_PASSWORD` | `rootpassword` |
+
+### 2. Suba o banco
+
+Na raiz do projeto, inicie os contêineres em segundo plano:
+
+```shell
+docker compose up -d
+```
+
+Confira se `economize_db` e `economize_pgadmin` estão em execução:
+
+```shell
+docker compose ps
+```
+
+Se o PostgreSQL ainda estiver inicializando, acompanhe seus logs:
+
+```shell
+docker compose logs -f db
+```
+
+Pressione `Ctrl+C` para sair dos logs sem parar o contêiner.
+
+### 3. Inicie a aplicação
 
 Linux e macOS:
 
@@ -88,7 +136,52 @@ Windows PowerShell:
 .\mvnw.cmd quarkus:dev
 ```
 
-A aplicação fica disponível em <http://localhost:8080>. Durante o desenvolvimento, a Dev UI do Quarkus fica em <http://localhost:8080/q/dev/>.
+O Flyway aplica as migrations na inicialização e o Hibernate valida o schema. Após a inicialização, estão disponíveis:
+
+| Recurso | Endereço |
+| --- | --- |
+| API | <http://localhost:8080> |
+| Swagger UI | <http://localhost:8080/q/swagger-ui> |
+| OpenAPI | <http://localhost:8080/q/openapi> |
+| Quarkus Dev UI | <http://localhost:8080/q/dev/> |
+
+### Acesse o pgAdmin
+
+Abra <http://localhost:5050> e entre com:
+
+| Campo | Valor |
+| --- | --- |
+| E-mail | `admin@admin.com` |
+| Senha | `admin` |
+
+No primeiro acesso, registre um servidor usando:
+
+| Campo | Valor |
+| --- | --- |
+| Host | `db` |
+| Porta | `5432` |
+| Banco de manutenção | `economize_db` |
+| Usuário | `postgres` |
+| Senha | `rootpassword` |
+
+Use `db`, e não `localhost`, porque o pgAdmin acessa o PostgreSQL pela rede interna do Compose.
+
+### Pare ou reinicie o banco
+
+Para parar e remover os contêineres, preservando os dados no volume `pgdata`:
+
+```shell
+docker compose down
+```
+
+Para remover também o volume e recriar um banco vazio na próxima inicialização:
+
+```shell
+docker compose down -v
+```
+
+> [!WARNING]
+> O comando `docker compose down -v` apaga definitivamente todos os dados locais armazenados pelo PostgreSQL.
 
 ## Testes
 
@@ -110,7 +203,7 @@ A validação usada pela CI é:
 ./mvnw verify -B
 ```
 
-Os testes de persistência dependem de um runtime de contêiner disponível para iniciar o PostgreSQL.
+Os testes permanecem isolados do banco local. Eles dependem de um runtime de contêiner disponível para o Quarkus Dev Services iniciar um PostgreSQL temporário.
 
 ## Configuração
 
@@ -118,36 +211,14 @@ Nos profiles `dev` e `prod`, configure o datasource pelas variáveis abaixo. O p
 
 | Variável | Descrição | Exemplo |
 | --- | --- | --- |
-| `DB_URL` | URL JDBC do PostgreSQL | `jdbc:postgresql://localhost:5432/economize` |
-| `DB_USERNAME` | Usuário do banco | `economize` |
+| `DB_URL` | URL JDBC do PostgreSQL | `jdbc:postgresql://localhost:5432/economize_db` |
+| `DB_USERNAME` | Usuário do banco | `postgres` |
 | `DB_PASSWORD` | Senha do banco | Não versionar este valor |
 | `JWT_CHAVE_PUBLICA` | Localização da chave pública RSA usada para validar tokens | `/run/secrets/jwt-public.pem` |
 | `JWT_CHAVE_PRIVADA` | Localização da chave privada RSA usada para assinar tokens | `/run/secrets/jwt-private.pem` |
 | `JWT_EXPIRACAO_SEGUNDOS` | Validade do token de acesso | `900` |
 
-O Flyway aplica as migrations na inicialização e o Hibernate apenas valida o schema. Em execução local, o Quarkus carrega automaticamente o arquivo `.env` localizado na raiz do projeto. Em outros ambientes, forneça as variáveis pela plataforma de execução.
-
-### Execução local
-
-O arquivo `.env.example` contém o contrato de configuração local. Crie o `.env` a partir dele e ajuste `DB_USERNAME` e `DB_PASSWORD` para o PostgreSQL disponível em `localhost`. O `.env` é ignorado pelo Git.
-
-No PowerShell 7, gere uma chave RSA privada PKCS#8 e a chave pública correspondente. O diretório `.certs/` também é ignorado pelo Git:
-
-```powershell
-New-Item -ItemType Directory -Path .certs -Force | Out-Null
-$rsa = [System.Security.Cryptography.RSA]::Create(2048)
-[System.IO.File]::WriteAllText('.certs/jwt-private.pem', $rsa.ExportPkcs8PrivateKeyPem())
-[System.IO.File]::WriteAllText('.certs/jwt-public.pem', $rsa.ExportSubjectPublicKeyInfoPem())
-$rsa.Dispose()
-```
-
-Inicie a aplicação na raiz do projeto:
-
-```powershell
-.\mvnw.cmd quarkus:dev
-```
-
-A aplicação ficará disponível em <http://localhost:8080> e usará o banco definido no `.env`. Esse fluxo não altera o profile `%test`, que continua usando o Quarkus Dev Services quando necessita de PostgreSQL.
+O Flyway aplica as migrations na inicialização e o Hibernate apenas valida o schema. Em execução local, o Quarkus carrega automaticamente o arquivo `.env` localizado na raiz do projeto. O `.env` é ignorado pelo Git. Em outros ambientes, forneça as variáveis e as chaves RSA pela plataforma de execução.
 
 ## Build JVM
 
