@@ -13,14 +13,14 @@ import org.mapstruct.MappingConstants;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.CDI)
 interface AutenticacaoHttpMapper {
-    AutenticarUsuario.Comando toCommand(LoginRequest request);
+  AutenticarUsuario.Comando toCommand(LoginRequest request);
 
-    CadastrarUsuario.Comando toCommand(CadastroRequest request);
+  CadastrarUsuario.Comando toCommand(CadastroRequest request);
 
-    @Mapping(target = "tipo", constant = "Bearer")
-    TokenResponse toResponse(AutenticarUsuario.Resultado resultado);
+  @Mapping(target = "tipo", constant = "Bearer")
+  TokenResponse toResponse(AutenticarUsuario.Resultado resultado);
 
-    CadastroResponse toResponse(CadastrarUsuario.Resultado resultado);
+  CadastroResponse toResponse(CadastrarUsuario.Resultado resultado);
 
-    UsuarioResponse toResponse(CadastrarUsuario.UsuarioCadastrado usuario);
+  UsuarioResponse toResponse(CadastrarUsuario.UsuarioCadastrado usuario);
 }

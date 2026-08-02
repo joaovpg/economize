@@ -26,45 +26,48 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 @Produces(MediaType.APPLICATION_JSON)
 @RolesAllowed("usuario")
 public class CategoriaResource {
-    private final CadastrarCategoria cadastrarCategoria;
-    private final EditarCategoria editarCategoria;
-    private final ListarCategorias listarCategorias;
-    private final CategoriaHttpMapper mapper;
-    private final JsonWebToken token;
+  private final CadastrarCategoria cadastrarCategoria;
+  private final EditarCategoria editarCategoria;
+  private final ListarCategorias listarCategorias;
+  private final CategoriaHttpMapper mapper;
+  private final JsonWebToken token;
 
-    public CategoriaResource(CadastrarCategoria cadastrarCategoria, EditarCategoria editarCategoria,
-                             ListarCategorias listarCategorias, CategoriaHttpMapper mapper, JsonWebToken token) {
-        this.cadastrarCategoria = cadastrarCategoria;
-        this.editarCategoria = editarCategoria;
-        this.listarCategorias = listarCategorias;
-        this.mapper = mapper;
-        this.token = token;
-    }
+  public CategoriaResource(
+      CadastrarCategoria cadastrarCategoria,
+      EditarCategoria editarCategoria,
+      ListarCategorias listarCategorias,
+      CategoriaHttpMapper mapper,
+      JsonWebToken token) {
+    this.cadastrarCategoria = cadastrarCategoria;
+    this.editarCategoria = editarCategoria;
+    this.listarCategorias = listarCategorias;
+    this.mapper = mapper;
+    this.token = token;
+  }
 
-    @POST
-    public Response cadastrar(@Valid CadastrarCategoriaRequest request) {
-        var resultado = cadastrarCategoria.executar(mapper.toCommand(usuarioId(), request));
+  @POST
+  public Response cadastrar(@Valid CadastrarCategoriaRequest request) {
+    var resultado = cadastrarCategoria.executar(mapper.toCommand(usuarioId(), request));
 
-        return Response
-                .status(Response.Status.CREATED)
-                .entity(mapper.toResponse(resultado))
-                .build();
-    }
+    return Response.status(Response.Status.CREATED).entity(mapper.toResponse(resultado)).build();
+  }
 
-    @PUT
-    @Path("/{categoriaId}")
-    public Response editar(@PathParam("categoriaId") UUID categoriaId, @Valid EditarCategoriaRequest request) {
-        var resultado = editarCategoria.executar(mapper.toCommand(usuarioId(), categoriaId, request));
-        return Response.ok(mapper.toResponse(resultado)).build();
-    }
+  @PUT
+  @Path("/{categoriaId}")
+  public Response editar(
+      @PathParam("categoriaId") UUID categoriaId, @Valid EditarCategoriaRequest request) {
+    var resultado = editarCategoria.executar(mapper.toCommand(usuarioId(), categoriaId, request));
+    return Response.ok(mapper.toResponse(resultado)).build();
+  }
 
-    @GET
-    public Response listar(@QueryParam("situacao") SituacaoCategoria situacao) {
-        var resposta = listarCategorias.executar(usuarioId(), situacao).stream().map(mapper::toResponse).toList();
-        return Response.ok(resposta).build();
-    }
+  @GET
+  public Response listar(@QueryParam("situacao") SituacaoCategoria situacao) {
+    var resposta =
+        listarCategorias.executar(usuarioId(), situacao).stream().map(mapper::toResponse).toList();
+    return Response.ok(resposta).build();
+  }
 
-    private UUID usuarioId() {
-        return UUID.fromString(token.getSubject());
-    }
+  private UUID usuarioId() {
+    return UUID.fromString(token.getSubject());
+  }
 }

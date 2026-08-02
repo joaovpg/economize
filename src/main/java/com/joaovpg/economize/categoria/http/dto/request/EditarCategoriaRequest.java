@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Pattern;
 import java.util.UUID;
 
 public record EditarCategoriaRequest(
-        @NotBlank String nome,
-        @Pattern(regexp = "^\\s*(#[0-9A-Fa-f]{6})?\\s*$") String cor,
-        UUID categoriaPaiId,
-        @NotNull SituacaoCategoria situacao) {}
+    @NotBlank String nome,
+    @Pattern(regexp = "^\\s*(#[0-9A-Fa-f]{6})?\\s*$") String cor,
+    UUID categoriaPaiId,
+    @NotNull SituacaoCategoria situacao) {}

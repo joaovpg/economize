@@ -12,9 +12,10 @@ import org.mapstruct.MappingConstants;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.CDI)
 interface CategoriaHttpMapper {
-    CadastrarCategoria.Comando toCommand(UUID usuarioId, CadastrarCategoriaRequest request);
+  CadastrarCategoria.Comando toCommand(UUID usuarioId, CadastrarCategoriaRequest request);
 
-    EditarCategoria.Comando toCommand(UUID usuarioId, UUID categoriaId, EditarCategoriaRequest request);
+  EditarCategoria.Comando toCommand(
+      UUID usuarioId, UUID categoriaId, EditarCategoriaRequest request);
 
-    CategoriaResponse toResponse(CategoriaResultado resultado);
+  CategoriaResponse toResponse(CategoriaResultado resultado);
 }

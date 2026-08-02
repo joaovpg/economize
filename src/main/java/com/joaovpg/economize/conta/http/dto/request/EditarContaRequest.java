@@ -7,8 +7,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record EditarContaRequest(
-        @NotBlank String nome,
-        @NotBlank String moeda,
-        @NotNull BigDecimal saldoInicial,
-        @NotNull LocalDate dataSaldoInicial,
-        @NotNull SituacaoConta situacao) {}
+    @NotBlank String nome,
+    @NotBlank String moeda,
+    @NotNull BigDecimal saldoInicial,
+    @NotNull LocalDate dataSaldoInicial,
+    @NotNull SituacaoConta situacao) {}

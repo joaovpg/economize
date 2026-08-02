@@ -9,16 +9,16 @@ import java.util.UUID;
 
 @ApplicationScoped
 public class ListarCategorias {
-    private final CategoriaRepository categoriaRepository;
+  private final CategoriaRepository categoriaRepository;
 
-    public ListarCategorias(CategoriaRepository categoriaRepository) {
-        this.categoriaRepository = categoriaRepository;
-    }
+  public ListarCategorias(CategoriaRepository categoriaRepository) {
+    this.categoriaRepository = categoriaRepository;
+  }
 
-    @Transactional
-    public List<CategoriaResultado> executar(UUID usuarioId, SituacaoCategoria situacao) {
-        return categoriaRepository.listarDoUsuario(usuarioId, situacao).stream()
-                .map(CategoriaValidation::resultado)
-                .toList();
-    }
+  @Transactional
+  public List<CategoriaResultado> executar(UUID usuarioId, SituacaoCategoria situacao) {
+    return categoriaRepository.listarDoUsuario(usuarioId, situacao).stream()
+        .map(CategoriaValidation::resultado)
+        .toList();
+  }
 }

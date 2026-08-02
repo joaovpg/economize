@@ -5,5 +5,5 @@ import jakarta.enterprise.context.ApplicationScoped;
 import java.util.UUID;
 
 @ApplicationScoped
-public class SegmentoRecorrenciaRepository implements PanacheRepositoryBase<SegmentoRecorrencia, UUID> {
-}
+public class SegmentoRecorrenciaRepository
+    implements PanacheRepositoryBase<SegmentoRecorrencia, UUID> {}

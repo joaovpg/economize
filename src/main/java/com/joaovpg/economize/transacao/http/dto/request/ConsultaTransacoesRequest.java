@@ -5,8 +5,4 @@ import java.util.List;
 import java.util.UUID;
 
 public record ConsultaTransacoesRequest(
-        YearMonth inicio,
-        YearMonth fim,
-        List<UUID> contaIds,
-        List<UUID> categoriaIds
-) { }
+    YearMonth inicio, YearMonth fim, List<UUID> contaIds, List<UUID> categoriaIds) {}

@@ -17,6 +17,8 @@
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.5.6</surefire-plugin.version>
         <org.mapstruct.version>1.6.3</org.mapstruct.version>
+        <spotless.version>3.9.0</spotless.version>
+        <google-java-format.version>1.35.0</google-java-format.version>
     </properties>
 
     <dependencyManagement>
@@ -181,6 +183,56 @@
                         <maven.home>${maven.home}</maven.home>
                     </systemPropertyVariables>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>${spotless.version}</version>
+
+                <configuration>
+                    <java>
+                        <removeUnusedImports />
+
+                        <googleJavaFormat>
+                            <version>${google-java-format.version}</version>
+                            <style>GOOGLE</style>
+                            <reflowLongStrings>true</reflowLongStrings>
+                            <formatJavadoc>true</formatJavadoc>
+                        </googleJavaFormat>
+
+
+                        <removeUnusedImports />
+                        <forbidWildcardImports />
+                        <forbidModuleImports />
+                        <formatAnnotations />
+
+                    </java>
+
+                    <formats>
+                        <format>
+                            <includes>
+                                <include>pom.xml</include>
+                                <include>src/**/*.xml</include>
+                                <include>src/**/*.yaml</include>
+                                <include>src/**/*.yml</include>
+                                <include>src/**/*.properties</include>
+                                <include>.gitignore</include>
+                                <include>.gitattributes</include>
+                            </includes>
+
+                            <trimTrailingWhitespace />
+                            <endWithNewline />
+                        </format>
+                    </formats>
+                </configuration>
+
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

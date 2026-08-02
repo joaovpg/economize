@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record CadastrarContaRequest(
-        @NotBlank String nome,
-        @NotBlank String moeda,
-        @NotNull BigDecimal saldoInicial,
-        @NotNull LocalDate dataSaldoInicial) {}
+    @NotBlank String nome,
+    @NotBlank String moeda,
+    @NotNull BigDecimal saldoInicial,
+    @NotNull LocalDate dataSaldoInicial) {}

@@ -17,35 +17,35 @@ import jakarta.ws.rs.core.Response;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class AutenticacaoResource {
-    private final AutenticarUsuario autenticarUsuario;
-    private final CadastrarUsuario cadastrarUsuario;
-    private final AutenticacaoHttpMapper mapper;
+  private final AutenticarUsuario autenticarUsuario;
+  private final CadastrarUsuario cadastrarUsuario;
+  private final AutenticacaoHttpMapper mapper;
 
-    public AutenticacaoResource(
-            AutenticarUsuario autenticarUsuario,
-            CadastrarUsuario cadastrarUsuario,
-            AutenticacaoHttpMapper mapper) {
-        this.autenticarUsuario = autenticarUsuario;
-        this.cadastrarUsuario = cadastrarUsuario;
-        this.mapper = mapper;
-    }
+  public AutenticacaoResource(
+      AutenticarUsuario autenticarUsuario,
+      CadastrarUsuario cadastrarUsuario,
+      AutenticacaoHttpMapper mapper) {
+    this.autenticarUsuario = autenticarUsuario;
+    this.cadastrarUsuario = cadastrarUsuario;
+    this.mapper = mapper;
+  }
 
-    @POST
-    @Path("/cadastro")
-    @PermitAll
-    public Response cadastrar(@Valid CadastroRequest request) {
-        var comando = mapper.toCommand(request);
-        var resultado = cadastrarUsuario.executar(comando);
-        return Response.status(Response.Status.CREATED).entity(mapper.toResponse(resultado)).build();
-    }
+  @POST
+  @Path("/cadastro")
+  @PermitAll
+  public Response cadastrar(@Valid CadastroRequest request) {
+    var comando = mapper.toCommand(request);
+    var resultado = cadastrarUsuario.executar(comando);
+    return Response.status(Response.Status.CREATED).entity(mapper.toResponse(resultado)).build();
+  }
 
-    @POST
-    @Path("/login")
-    @PermitAll
-    public Response login(@Valid LoginRequest request) {
-        var comando = mapper.toCommand(request);
-        var resultado = autenticarUsuario.executar(comando);
-        var response = mapper.toResponse(resultado);
-        return Response.ok(response).build();
-    }
+  @POST
+  @Path("/login")
+  @PermitAll
+  public Response login(@Valid LoginRequest request) {
+    var comando = mapper.toCommand(request);
+    var resultado = autenticarUsuario.executar(comando);
+    var response = mapper.toResponse(resultado);
+    return Response.ok(response).build();
+  }
 }

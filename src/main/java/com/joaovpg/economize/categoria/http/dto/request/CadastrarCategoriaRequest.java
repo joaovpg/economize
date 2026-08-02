@@ -5,6 +5,6 @@ import jakarta.validation.constraints.Pattern;
 import java.util.UUID;
 
 public record CadastrarCategoriaRequest(
-        @NotBlank String nome,
-        @Pattern(regexp = "^\\s*(#[0-9A-Fa-f]{6})?\\s*$") String cor,
-        UUID categoriaPaiId) {}
+    @NotBlank String nome,
+    @Pattern(regexp = "^\\s*(#[0-9A-Fa-f]{6})?\\s*$") String cor,
+    UUID categoriaPaiId) {}

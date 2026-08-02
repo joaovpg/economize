@@ -1,10 +1,10 @@
 package com.joaovpg.economize.transacao;
 
 import com.joaovpg.economize.categoria.Categoria;
-import com.joaovpg.economize.shared.persistence.EntidadeBase;
 import com.joaovpg.economize.conta.ContaFinanceira;
 import com.joaovpg.economize.recorrencia.GrupoRecorrencia;
 import com.joaovpg.economize.recorrencia.SegmentoRecorrencia;
+import com.joaovpg.economize.shared.persistence.EntidadeBase;
 import com.joaovpg.economize.usuario.Usuario;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,52 +27,52 @@ import lombok.Setter;
 @Entity
 @Table(name = "TB006_TRANSACAO")
 public class Transacao extends EntidadeBase {
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ID_USUARIO", nullable = false)
-    private Usuario usuario;
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "ID_USUARIO", nullable = false)
+  private Usuario usuario;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ID_CONTA_FINANCEIRA", nullable = false)
-    private ContaFinanceira conta;
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "ID_CONTA_FINANCEIRA", nullable = false)
+  private ContaFinanceira conta;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ID_CATEGORIA")
-    private Categoria categoria;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "ID_CATEGORIA")
+  private Categoria categoria;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ID_GRUPO_RECORRENCIA")
-    private GrupoRecorrencia grupoRecorrencia;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "ID_GRUPO_RECORRENCIA")
+  private GrupoRecorrencia grupoRecorrencia;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ID_SEGMENTO_RECORRENCIA")
-    private SegmentoRecorrencia segmentoRecorrencia;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "ID_SEGMENTO_RECORRENCIA")
+  private SegmentoRecorrencia segmentoRecorrencia;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "STR_TIPO", nullable = false, length = 20)
-    private TipoTransacao tipo;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "STR_TIPO", nullable = false, length = 20)
+  private TipoTransacao tipo;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "STR_SITUACAO", nullable = false, length = 20)
-    private SituacaoTransacao situacao;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "STR_SITUACAO", nullable = false, length = 20)
+  private SituacaoTransacao situacao;
 
-    @Column(name = "STR_DESCRICAO", nullable = false, length = 255)
-    private String descricao;
+  @Column(name = "STR_DESCRICAO", nullable = false)
+  private String descricao;
 
-    @Column(name = "STR_OBSERVACOES", length = 2000)
-    private String observacoes;
+  @Column(name = "STR_OBSERVACOES", length = 2000)
+  private String observacoes;
 
-    @Column(name = "DEC_VALOR", nullable = false, precision = 19, scale = 4)
-    private BigDecimal valor;
+  @Column(name = "DEC_VALOR", nullable = false, precision = 19, scale = 4)
+  private BigDecimal valor;
 
-    @Column(name = "DAT_FINANCEIRA", nullable = false)
-    private LocalDate dataFinanceira;
+  @Column(name = "DAT_FINANCEIRA", nullable = false)
+  private LocalDate dataFinanceira;
 
-    @Column(name = "DAT_IDENTIFICADOR_RECORRENCIA")
-    private LocalDate identificadorRecorrencia;
+  @Column(name = "DAT_IDENTIFICADOR_RECORRENCIA")
+  private LocalDate identificadorRecorrencia;
 
-    @Column(name = "DHR_EFETIVACAO")
-    private Instant efetivadoEm;
+  @Column(name = "DHR_EFETIVACAO")
+  private Instant efetivadoEm;
 
-    @Column(name = "BOL_EXCECAO_RECORRENCIA", nullable = false)
-    private boolean excecaoRecorrencia;
+  @Column(name = "BOL_EXCECAO_RECORRENCIA", nullable = false)
+  private boolean excecaoRecorrencia;
 }

@@ -20,14 +20,14 @@ import lombok.Setter;
 @Entity
 @Table(name = "TB004_GRUPO_RECORRENCIA")
 public class GrupoRecorrencia extends EntidadeBase {
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ID_USUARIO", nullable = false)
-    private Usuario usuario;
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "ID_USUARIO", nullable = false)
+  private Usuario usuario;
 
-    @Column(name = "STR_DESCRICAO", nullable = false, length = 255)
-    private String descricao;
+  @Column(name = "STR_DESCRICAO", nullable = false)
+  private String descricao;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "STR_STATUS", nullable = false, length = 20)
-    private StatusRecorrencia status;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "STR_STATUS", nullable = false, length = 20)
+  private StatusRecorrencia status;
 }

@@ -8,12 +8,16 @@ import jakarta.ws.rs.ext.Provider;
 import java.util.Map;
 
 @Provider
-public class ConsultaTransacoesInvalidaMapper implements ExceptionMapper<ConsultaTransacoesInvalidaException> {
-    @Override
-    public Response toResponse(ConsultaTransacoesInvalidaException exception) {
-        return Response.status(Response.Status.BAD_REQUEST)
-                .entity(new ErroResponse("DADOS_INVALIDOS", "Um ou mais campos sao invalidos",
-                        Map.of(exception.campo(), exception.getMessage())))
-                .build();
-    }
+public class ConsultaTransacoesInvalidaMapper
+    implements ExceptionMapper<ConsultaTransacoesInvalidaException> {
+  @Override
+  public Response toResponse(ConsultaTransacoesInvalidaException exception) {
+    return Response.status(Response.Status.BAD_REQUEST)
+        .entity(
+            new ErroResponse(
+                "DADOS_INVALIDOS",
+                "Um ou mais campos sao invalidos",
+                Map.of(exception.campo(), exception.getMessage())))
+        .build();
+  }
 }

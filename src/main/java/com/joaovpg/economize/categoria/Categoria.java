@@ -18,21 +18,20 @@ import lombok.Setter;
 @Entity
 @Table(name = "TB003_CATEGORIA")
 public class Categoria extends EntidadeBase {
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ID_USUARIO", nullable = false)
-    private Usuario usuario;
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "ID_USUARIO", nullable = false)
+  private Usuario usuario;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ID_CATEGORIA_PAI")
-    private Categoria categoriaPai;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "ID_CATEGORIA_PAI")
+  private Categoria categoriaPai;
 
-    @Column(name = "STR_NOME", nullable = false, length = 80)
-    private String nome;
+  @Column(name = "STR_NOME", nullable = false, length = 80)
+  private String nome;
 
-    @Column(name = "STR_COR", length = 20)
-    private String cor;
+  @Column(name = "STR_COR", length = 20)
+  private String cor;
 
-    @Column(name = "BOL_ATIVO", nullable = false)
-    private boolean ativo = true;
-
+  @Column(name = "BOL_ATIVO", nullable = false)
+  private boolean ativo = true;
 }

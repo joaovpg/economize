@@ -1,0 +1,39 @@
+package com.joaovpg.economize.transferencia.application;
+
+import com.joaovpg.economize.shared.RecursoNaoEncontradoException;
+import com.joaovpg.economize.transacao.TransacaoRepository;
+import com.joaovpg.economize.transferencia.TransferenciaRepository;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
+import java.util.UUID;
+
+@ApplicationScoped
+public class ExcluirTransferencia {
+  private final TransferenciaRepository transferenciaRepository;
+  private final TransacaoRepository transacaoRepository;
+
+  public ExcluirTransferencia(
+      TransferenciaRepository transferenciaRepository, TransacaoRepository transacaoRepository) {
+    this.transferenciaRepository = transferenciaRepository;
+    this.transacaoRepository = transacaoRepository;
+  }
+
+  @Transactional
+  public void executar(UUID usuarioId, UUID transferenciaId) {
+    var transferencia =
+        transferenciaRepository
+            .buscarDoUsuarioParaEdicao(transferenciaId, usuarioId)
+            .orElseThrow(
+                () ->
+                    new RecursoNaoEncontradoException(
+                        "RECURSO_NAO_ENCONTRADO", "Transferencia nao encontrada"));
+
+    var saida = transferencia.getTransacaoSaida();
+    var entrada = transferencia.getTransacaoEntrada();
+
+    transferenciaRepository.delete(transferencia);
+    transferenciaRepository.flush();
+    transacaoRepository.delete(saida);
+    transacaoRepository.delete(entrada);
+  }
+}

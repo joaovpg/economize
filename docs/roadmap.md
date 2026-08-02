@@ -8,6 +8,7 @@
 - Gestao de Categorias com cadastro, edicao, alteracao de situacao e listagem.
 - Gestao de Contas financeiras com cadastro, edicao, alteracao de situacao e listagem.
 - Gestao de Transacoes simples, com criacao planejada ou efetivada, alteracao, transicoes e exclusao definitiva.
+- Transferencias simples atomicas, com escrita propria e lados incorporados a consulta unificada de Transacoes.
 
 O schema inicial e o fluxo existente de criacao de Transacoes ainda precisam das adequacoes de ciclo de vida, integridade e contrato descritas nos marcos restantes. A migration inicial compartilhada permanece imutavel; mudancas de schema serao migrations incrementais introduzidas no primeiro marco que necessitar de cada regra.
 
@@ -141,11 +142,13 @@ Oferecer uma linha do tempo unificada e o Saldo de abertura necessario para o fr
 
 - Intervalo mensal, filtros e Saldo de abertura possuem contrato HTTP e caso de uso.
 - Resultados persistidos e virtuais formam uma unica listagem deterministica, quando os modulos correspondentes estiverem disponiveis.
-- Saldo de abertura e itens respeitam Data financeira, tipo, periodo e filtros sem distinguir Situacoes da transacao.
+- Saldo de abertura e itens respeitam Data financeira, periodo e filtros sem distinguir Situacoes da transacao.
 - Testes de integracao cobrem limites de periodo, filtros, ordenacao, contas inativas, Saldo de abertura e itens de saldo inicial.
 - O glossario define Saldo de abertura e Item de saldo inicial.
 
 ### 4. Transferencias simples
+
+**Estado:** concluido.
 
 #### Objetivo
 
@@ -160,29 +163,30 @@ Permitir movimentacoes atomicas entre duas Contas financeiras do mesmo Usuario.
 #### Escopo
 
 - Criar Transferencia como `PLANEJADA` ou `EFETIVADA`.
-- Alterar, efetivar e replanejar Transferencia.
+- Alterar, efetivar e replanejar Transferencia por uma unica substituicao completa.
 - Excluir fisicamente Transferencia planejada ou efetivada.
-- Listar Transferencias de um unico mes civil, usando o mes atual por padrao e sem paginacao.
-- Consultar Transferencia por identificador.
-- Exibir os dois lados na consulta unificada de Transacoes.
+- Exibir e consultar Transferencias somente pelos dois lados na consulta unificada de Transacoes.
 - Nao inclui Transferencias recorrentes, parceladas, cancelamento ou estorno.
 
 #### Regras criticas e dados
 
 - Origem e destino pertencem ao Usuario autenticado, sao distintas e usam a mesma moeda.
 - Criar uma Transferencia exige contas ativas. Operacoes existentes em contas inativas continuam editaveis, efetivaveis, replanejaveis e excluiveis; uma nova associacao exige conta ativa.
-- A Transferencia cria uma despesa na origem e uma receita no destino na mesma transacao de banco.
+- A Transferencia cria uma despesa na origem e uma receita no destino na mesma transacao de banco. O tipo legado `TRANSFERENCIA` nao representa uma Transacao valida.
+- Os dois lados nao possuem Categoria. Informar um filtro de Categoria na consulta unificada exclui Transferencias.
 - Valor, Data financeira, descricao, observacoes, situacao e instante de efetivacao sao iguais entre a operacao e seus dois lados.
 - Os lados permanecem vinculados e nunca podem ser alterados ou excluidos isoladamente.
 - Alterar contas, valor, Data financeira, descricao, observacoes ou situacao atualiza atomicamente a Transferencia e seus lados.
 - Efetivar atribui o mesmo `efetivadoEm` aos tres registros. Replanejar limpa os tres instantes; efetivar novamente gera outro instante comum.
+- Uma Transferencia efetivada exige Data financeira igual ou anterior a data atual no fuso do Usuario.
 - `PLANEJADA` e `EFETIVADA` sao as unicas Situacoes da transferencia. Estados de cancelamento e estorno e o relacionamento de estorno serao removidos do schema.
 - A exclusao remove atomicamente a Transferencia e suas duas Transacoes, sem permitir lados orfaos.
 - A integridade de Usuario, contas, moeda, tipos e dados compartilhados permanece protegida no banco com mecanismo compativel com operacoes existentes em contas inativas.
+- Na consulta unificada, os dois lados usam origem `TRANSFERENCIA`, o identificador da Transferencia como identificador da operacao e informam a Conta contraparte. O valor e negativo na saida, positivo na entrada e a saida aparece primeiro.
 
 #### Concluido quando
 
-- Criacao, alteracao, mudanca de situacao, exclusao, listagem e detalhamento possuem contratos HTTP e casos de uso.
+- Criacao, alteracao e exclusao possuem contratos HTTP e casos de uso; a leitura ocorre exclusivamente pela consulta unificada de Transacoes.
 - Escritas e exclusoes dos tres registros sao atomicas.
 - O schema representa somente o ciclo de vida aprovado e impede lados inconsistentes, orfaos ou manipulados isoladamente.
 - A consulta unificada e os saldos incorporam os lados corretamente.

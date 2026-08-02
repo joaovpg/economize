@@ -5,5 +5,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-public record ContaResponse(UUID id, String nome, String moeda, BigDecimal saldoInicial,
-                            LocalDate dataSaldoInicial, SituacaoConta situacao) {}
+public record ContaResponse(
+    UUID id,
+    String nome,
+    String moeda,
+    BigDecimal saldoInicial,
+    LocalDate dataSaldoInicial,
+    SituacaoConta situacao) {}

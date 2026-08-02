@@ -13,32 +13,32 @@ import lombok.Getter;
 @Getter
 @MappedSuperclass
 public abstract class EntidadeBase {
-    @Id
-    @Column(name = "ID_REGISTRO", nullable = false, updatable = false)
-    protected UUID id;
+  @Id
+  @Column(name = "ID_REGISTRO", nullable = false, updatable = false)
+  protected UUID id;
 
-    @Column(name = "DHR_CRIACAO", nullable = false, updatable = false)
-    protected Instant criadoEm;
+  @Column(name = "DHR_CRIACAO", nullable = false, updatable = false)
+  protected Instant criadoEm;
 
-    @Column(name = "DHR_ATUALIZACAO", nullable = false)
-    protected Instant atualizadoEm;
+  @Column(name = "DHR_ATUALIZACAO", nullable = false)
+  protected Instant atualizadoEm;
 
-    @Version
-    @Column(name = "VER_REGISTRO", nullable = false)
-    protected long versao;
+  @Version
+  @Column(name = "VER_REGISTRO", nullable = false)
+  protected long versao;
 
-    @PrePersist
-    protected void prepararCriacao() {
-        var now = Instant.now();
-        if (id == null) {
-            id = UUID.randomUUID();
-        }
-        criadoEm = now;
-        atualizadoEm = now;
+  @PrePersist
+  protected void prepararCriacao() {
+    var now = Instant.now();
+    if (id == null) {
+      id = UUID.randomUUID();
     }
+    criadoEm = now;
+    atualizadoEm = now;
+  }
 
-    @PreUpdate
-    protected void prepararAtualizacao() {
-        atualizadoEm = Instant.now();
-    }
+  @PreUpdate
+  protected void prepararAtualizacao() {
+    atualizadoEm = Instant.now();
+  }
 }

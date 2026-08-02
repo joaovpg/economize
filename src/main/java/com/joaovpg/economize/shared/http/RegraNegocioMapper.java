@@ -7,10 +7,10 @@ import jakarta.ws.rs.ext.Provider;
 
 @Provider
 public class RegraNegocioMapper implements ExceptionMapper<RegraNegocioException> {
-    @Override
-    public Response toResponse(RegraNegocioException exception) {
-        return Response.status(422)
-                .entity(new ErroResponse(exception.codigo(), exception.getMessage()))
-                .build();
-    }
+  @Override
+  public Response toResponse(RegraNegocioException exception) {
+    return Response.status(422)
+        .entity(new ErroResponse(exception.codigo(), exception.getMessage()))
+        .build();
+  }
 }

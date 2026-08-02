@@ -16,8 +16,11 @@
 - **Instante de efetivacao**: instante em que uma Transacao passou para `EFETIVADA`; e preservado em correcoes enquanto ela permanece efetivada e limpo ao replanejar.
 - **Saldo de abertura**: saldo consolidado no dia anterior ao primeiro mes consultado, derivado dos saldos iniciais ja vigentes e de todas as Transacoes anteriores atendidas pelos filtros de Conta financeira e Categoria.
 - **Item de saldo inicial**: entrada da linha do tempo que representa o inicio de uma Conta financeira com saldo inicial diferente de zero dentro do periodo consultado; nao e uma Transacao.
-- **Transferencia**: operacao atomica que vincula uma saida e uma entrada entre contas.
+- **Origem do item**: agregado que governa o ciclo de vida de um item da linha do tempo, como `TRANSACAO_SIMPLES`, `TRANSFERENCIA` ou `SALDO_INICIAL_CONTA`.
+- **Impacto financeiro**: valor assinado de um item da linha do tempo; entradas sao positivas e saidas sao negativas, enquanto valores persistidos e contratos de escrita permanecem positivos.
+- **Transferencia**: operacao atomica que vincula uma despesa na Conta financeira de origem e uma receita na Conta financeira de destino.
 - **Situacao da transferencia**: condicao compartilhada pela Transferencia e suas duas Transacoes, representada no MVP por `PLANEJADA` ou `EFETIVADA`.
+- **Conta contraparte**: a outra Conta financeira de uma Transferencia em relacao ao lado exibido na linha do tempo.
 - **Grupo de recorrencia**: origem comum preservada para segmentos e excecoes recorrentes.
 - **Segmento de recorrencia**: trecho independente de uma recorrencia governado por uma RRULE.
 - **Ocorrencia recorrente**: instancia financeira prevista por um Segmento de recorrencia, virtual enquanto apenas projetada e persistida quando efetivada ou individualizada.

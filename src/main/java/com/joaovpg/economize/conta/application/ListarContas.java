@@ -10,24 +10,22 @@ import java.util.UUID;
 
 @ApplicationScoped
 public class ListarContas {
-    private final ContaFinanceiraRepository contaRepository;
+  private final ContaFinanceiraRepository contaRepository;
 
-    public ListarContas(ContaFinanceiraRepository contaRepository) {
-        this.contaRepository = contaRepository;
-    }
+  public ListarContas(ContaFinanceiraRepository contaRepository) {
+    this.contaRepository = contaRepository;
+  }
 
-    @Transactional
-    public List<ContaResultado> executar(UUID usuarioId) {
-        return resultados(contaRepository.listarDoUsuario(usuarioId));
-    }
+  @Transactional
+  public List<ContaResultado> executar(UUID usuarioId) {
+    return resultados(contaRepository.listarDoUsuario(usuarioId));
+  }
 
-    public List<ContaResultado> executar(UUID usuarioId, SituacaoConta situacao) {
-        return resultados(contaRepository.listarDoUsuario(usuarioId, situacao));
-    }
+  public List<ContaResultado> executar(UUID usuarioId, SituacaoConta situacao) {
+    return resultados(contaRepository.listarDoUsuario(usuarioId, situacao));
+  }
 
-    private List<ContaResultado> resultados(List<ContaFinanceira> contas) {
-        return contas.stream()
-                .map(ContaValidation::resultado)
-                .toList();
-    }
+  private List<ContaResultado> resultados(List<ContaFinanceira> contas) {
+    return contas.stream().map(ContaValidation::resultado).toList();
+  }
 }

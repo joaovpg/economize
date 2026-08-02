@@ -5,7 +5,7 @@
 Backend de um sistema pessoal para registrar e catalogar receitas, despesas, transferências e recorrências financeiras.
 
 > [!IMPORTANT]
-> O projeto está em desenvolvimento. A entrega atual implementa o núcleo de persistência, cadastro e autenticação JWT de usuários, gestão de contas e categorias e o ciclo completo de transações simples.
+> O projeto está em desenvolvimento. A entrega atual implementa o núcleo de persistência, cadastro e autenticação JWT de usuários, gestão de contas e categorias, transações simples, consultas com saldo de abertura e transferências simples.
 
 ## Estado atual
 
@@ -17,9 +17,11 @@ O repositório contém:
 - testes de integração da persistência com banco real via Quarkus Dev Services;
 - cadastro público, login com e-mail e senha e emissão de JWT;
 - gestão autenticada de contas financeiras, categorias e receitas ou despesas simples planejadas e efetivadas, incluindo alteração, transições e exclusão definitiva;
+- consulta mensal unificada de Transações com filtros, impactos assinados, itens de saldo inicial e Saldo de abertura;
+- criação, alteração, efetivação, replanejamento e exclusão atômica de Transferências simples, sem Categoria e exibidas por seus dois lados na consulta unificada;
 - infraestrutura REST e OpenAPI configurada, além de dependências planejadas para mapeamentos, integrações e métricas.
 
-O próximo marco implementa consultas mensais de Transações e cálculo de saldos derivados. Consulte o [roadmap](docs/roadmap.md) para todas as entregas planejadas.
+O próximo marco implementa o Motor de recorrência. Consulte o [roadmap](docs/roadmap.md) para todas as entregas planejadas.
 
 ## Modelo financeiro
 
@@ -47,7 +49,7 @@ As regras, convenções físicas e limitações desta entrega estão em [`docs/m
 
 ## Arquitetura
 
-O Economize é um monólito modular organizado por domínio. Atualmente, os módulos implementam principalmente entidades e repositórios. As próximas funcionalidades devem acrescentar entradas HTTP, casos de uso e regras de domínio dentro do módulo responsável, sem criar pacotes globais por camada.
+O Economize é um monólito modular organizado por domínio. Os fluxos públicos seguem `Resource -> mapper MapStruct -> caso de uso -> repository Panache`, mantendo regras e transações no módulo responsável, sem pacotes globais por camada.
 
 Cada módulo começa plano e só ganha subpacotes como `http`, `application`, `domain` e `persistence` quando responsabilidades concretas justificarem a divisão. DTOs HTTP permanecem próximos ao adapter, sob `http/dto`, e nunca dependem de entidades JPA ou repositórios.
 

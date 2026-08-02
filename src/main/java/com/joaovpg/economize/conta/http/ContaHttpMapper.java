@@ -12,9 +12,9 @@ import org.mapstruct.MappingConstants;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.CDI)
 interface ContaHttpMapper {
-    CadastrarConta.Comando toCommand(UUID usuarioId, CadastrarContaRequest request);
+  CadastrarConta.Comando toCommand(UUID usuarioId, CadastrarContaRequest request);
 
-    EditarConta.Comando toCommand(UUID usuarioId, UUID contaId, EditarContaRequest request);
+  EditarConta.Comando toCommand(UUID usuarioId, UUID contaId, EditarContaRequest request);
 
-    ContaResponse toResponse(ContaResultado resultado);
+  ContaResponse toResponse(ContaResultado resultado);
 }
