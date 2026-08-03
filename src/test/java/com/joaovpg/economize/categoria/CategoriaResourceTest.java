@@ -79,7 +79,7 @@ class CategoriaResourceTest {
         .post("/api/categorias")
         .then()
         .statusCode(422)
-        .body("codigo", equalTo("NOME_CATEGORIA_DUPLICADO"));
+        .body("type", equalTo("urn:economize:problem:NOME_CATEGORIA_DUPLICADO"));
   }
 
   @Test
@@ -139,7 +139,7 @@ class CategoriaResourceTest {
 
     editar(token, moradiaId, "Moradia", moveisId, "ATIVA")
         .statusCode(422)
-        .body("codigo", equalTo("HIERARQUIA_CATEGORIA_CICLICA"));
+        .body("type", equalTo("urn:economize:problem:HIERARQUIA_CATEGORIA_CICLICA"));
   }
 
   @Test
@@ -150,12 +150,12 @@ class CategoriaResourceTest {
 
     editar(token, moradiaId, "Moradia", null, "INATIVA")
         .statusCode(422)
-        .body("codigo", equalTo("CATEGORIA_POSSUI_DESCENDENTE_ATIVA"));
+        .body("type", equalTo("urn:economize:problem:CATEGORIA_POSSUI_DESCENDENTE_ATIVA"));
     editar(token, moveisId, "Moveis", moradiaId, "INATIVA").statusCode(200);
     editar(token, moradiaId, "Moradia", null, "INATIVA").statusCode(200);
     editar(token, moveisId, "Moveis", moradiaId, "ATIVA")
         .statusCode(422)
-        .body("codigo", equalTo("CATEGORIA_POSSUI_ANCESTRAL_INATIVA"));
+        .body("type", equalTo("urn:economize:problem:CATEGORIA_POSSUI_ANCESTRAL_INATIVA"));
   }
 
   @Test
@@ -180,7 +180,7 @@ class CategoriaResourceTest {
 
     editar(autenticar(), categoriaId, "Invadida", null, "ATIVA")
         .statusCode(404)
-        .body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+        .body("type", equalTo("urn:economize:problem:RECURSO_NAO_ENCONTRADO"));
   }
 
   private String cadastrar(String token, String nome, String paiId) {

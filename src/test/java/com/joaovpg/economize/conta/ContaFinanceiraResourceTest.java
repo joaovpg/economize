@@ -166,7 +166,7 @@ class ContaFinanceiraResourceTest {
         .post("/api/contas")
         .then()
         .statusCode(422)
-        .body("codigo", equalTo("NOME_CONTA_DUPLICADO"));
+        .body("type", equalTo("urn:economize:problem:NOME_CONTA_DUPLICADO"));
   }
 
   @Test
@@ -175,10 +175,10 @@ class ContaFinanceiraResourceTest {
 
     cadastrarInvalida(token, "brl", "0")
         .statusCode(422)
-        .body("codigo", equalTo("MOEDA_CONTA_INVALIDA"));
+        .body("type", equalTo("urn:economize:problem:MOEDA_CONTA_INVALIDA"));
     cadastrarInvalida(token, "BRL", "0.00001")
         .statusCode(422)
-        .body("codigo", equalTo("SALDO_INICIAL_INVALIDO"));
+        .body("type", equalTo("urn:economize:problem:SALDO_INICIAL_INVALIDO"));
   }
 
   @Test
@@ -203,7 +203,7 @@ class ContaFinanceiraResourceTest {
         .post("/api/contas")
         .then()
         .statusCode(422)
-        .body("codigo", equalTo("DATA_SALDO_INICIAL_INVALIDA"));
+        .body("type", equalTo("urn:economize:problem:DATA_SALDO_INICIAL_INVALIDA"));
   }
 
   @Test
@@ -214,7 +214,7 @@ class ContaFinanceiraResourceTest {
 
     editar(tokenOutroUsuario, contaId, "Invadida", "ATIVA")
         .statusCode(404)
-        .body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+        .body("type", equalTo("urn:economize:problem:RECURSO_NAO_ENCONTRADO"));
     given()
         .auth()
         .oauth2(tokenOutroUsuario)

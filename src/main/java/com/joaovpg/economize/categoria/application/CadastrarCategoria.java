@@ -2,7 +2,7 @@ package com.joaovpg.economize.categoria.application;
 
 import com.joaovpg.economize.categoria.Categoria;
 import com.joaovpg.economize.categoria.CategoriaRepository;
-import com.joaovpg.economize.shared.RecursoNaoEncontradoException;
+import com.joaovpg.economize.shared.exception.RecursoNaoEncontradoException;
 import com.joaovpg.economize.usuario.StatusUsuario;
 import com.joaovpg.economize.usuario.UsuarioRepository;
 import jakarta.enterprise.context.ApplicationScoped;

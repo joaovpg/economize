@@ -193,7 +193,7 @@ class TransacaoResourceTest {
 
     criarTransacaoEfetivada(autenticar(), "DESPESA", amanha, null)
         .statusCode(422)
-        .body("codigo", equalTo("DATA_FINANCEIRA_FUTURA"));
+        .body("type", equalTo("urn:economize:problem:DATA_FINANCEIRA_FUTURA"));
   }
 
   @Test
@@ -201,7 +201,7 @@ class TransacaoResourceTest {
     criarTransacaoEfetivada(
             autenticar(), "DESPESA", LocalDate.now(FUSO_USUARIO), categoriaInativaId)
         .statusCode(404)
-        .body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+        .body("type", equalTo("urn:economize:problem:RECURSO_NAO_ENCONTRADO"));
   }
 
   @Test
@@ -209,7 +209,7 @@ class TransacaoResourceTest {
     criarTransacaoEfetivada(
             autenticar(), contaInativaId, "DESPESA", LocalDate.now(FUSO_USUARIO), null)
         .statusCode(404)
-        .body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+        .body("type", equalTo("urn:economize:problem:RECURSO_NAO_ENCONTRADO"));
   }
 
   @Test
@@ -217,7 +217,7 @@ class TransacaoResourceTest {
     criarTransacaoEfetivada(
             autenticar(), "DESPESA", LocalDate.now(FUSO_USUARIO), categoriaOutroUsuarioId)
         .statusCode(404)
-        .body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+        .body("type", equalTo("urn:economize:problem:RECURSO_NAO_ENCONTRADO"));
   }
 
   @Test
@@ -233,14 +233,14 @@ class TransacaoResourceTest {
         .statusCode(201);
     criarTransacaoEfetivada(autenticar(), "RECEITA", hojeEmKiritimati, null)
         .statusCode(422)
-        .body("codigo", equalTo("DATA_FINANCEIRA_FUTURA"));
+        .body("type", equalTo("urn:economize:problem:DATA_FINANCEIRA_FUTURA"));
   }
 
   @Test
   void rejeitaTransacaoEfetivadaAnteriorADataDoSaldoInicial() {
     criarTransacaoEfetivada(autenticar(), "DESPESA", LocalDate.of(2025, 12, 31), null)
         .statusCode(422)
-        .body("codigo", equalTo("DATA_FINANCEIRA_ANTERIOR_SALDO_INICIAL"));
+        .body("type", equalTo("urn:economize:problem:DATA_FINANCEIRA_ANTERIOR_SALDO_INICIAL"));
   }
 
   @Test
@@ -311,7 +311,8 @@ class TransacaoResourceTest {
         .when()
         .post("/api/transacoes")
         .then()
-        .statusCode(401);
+        .statusCode(401)
+        .contentType("application/problem+json");
   }
 
   @Test
@@ -327,7 +328,8 @@ class TransacaoResourceTest {
         .post("/api/autenticacao/login")
         .then()
         .statusCode(401)
-        .body("codigo", equalTo("CREDENCIAIS_INVALIDAS"));
+        .contentType("application/problem+json")
+        .body("type", equalTo("urn:economize:problem:CREDENCIAIS_INVALIDAS"));
   }
 
   @Test
@@ -393,7 +395,7 @@ class TransacaoResourceTest {
         .post("/api/transacoes")
         .then()
         .statusCode(404)
-        .body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+        .body("type", equalTo("urn:economize:problem:RECURSO_NAO_ENCONTRADO"));
   }
 
   @Test
@@ -419,14 +421,14 @@ class TransacaoResourceTest {
         .put("/api/contas/{id}", contaId)
         .then()
         .statusCode(422)
-        .body("codigo", equalTo("DADOS_INICIAIS_CONTA_IMUTAVEIS"));
+        .body("type", equalTo("urn:economize:problem:DADOS_INICIAIS_CONTA_IMUTAVEIS"));
   }
 
   @Test
   void rejeitaTransacaoAnteriorADataDoSaldoInicial() {
     criarTransacao(autenticar(), "2025-12-31")
         .statusCode(422)
-        .body("codigo", equalTo("DATA_FINANCEIRA_ANTERIOR_SALDO_INICIAL"));
+        .body("type", equalTo("urn:economize:problem:DATA_FINANCEIRA_ANTERIOR_SALDO_INICIAL"));
   }
 
   @Test
@@ -465,7 +467,7 @@ class TransacaoResourceTest {
     excluirTransacao(token, transacaoId).statusCode(204);
     excluirTransacao(token, transacaoId)
         .statusCode(404)
-        .body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+        .body("type", equalTo("urn:economize:problem:RECURSO_NAO_ENCONTRADO"));
 
     QuarkusTransaction.requiringNew()
         .run(
@@ -509,7 +511,7 @@ class TransacaoResourceTest {
 
     excluirTransacao(autenticar(), transacaoId)
         .statusCode(404)
-        .body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+        .body("type", equalTo("urn:economize:problem:RECURSO_NAO_ENCONTRADO"));
     excluirTransacao(autenticarOutroUsuario(), transacaoId).statusCode(204);
   }
 
@@ -517,7 +519,7 @@ class TransacaoResourceTest {
   void retornaNaoEncontradoParaIdentificadorInexistente() {
     excluirTransacao(autenticar(), UUID.randomUUID())
         .statusCode(404)
-        .body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+        .body("type", equalTo("urn:economize:problem:RECURSO_NAO_ENCONTRADO"));
   }
 
   @Test
@@ -532,7 +534,7 @@ class TransacaoResourceTest {
 
     excluirTransacao(token, transacaoId)
         .statusCode(422)
-        .body("codigo", equalTo("TRANSACAO_NAO_SIMPLES"));
+        .body("type", equalTo("urn:economize:problem:TRANSACAO_NAO_SIMPLES"));
   }
 
   @Test
@@ -555,7 +557,7 @@ class TransacaoResourceTest {
 
     excluirTransacao(token, transacaoId)
         .statusCode(422)
-        .body("codigo", equalTo("TRANSACAO_NAO_SIMPLES"));
+        .body("type", equalTo("urn:economize:problem:TRANSACAO_NAO_SIMPLES"));
   }
 
   @Test
@@ -720,7 +722,7 @@ class TransacaoResourceTest {
             "99.0000",
             LocalDate.now(FUSO_USUARIO))
         .statusCode(404)
-        .body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+        .body("type", equalTo("urn:economize:problem:RECURSO_NAO_ENCONTRADO"));
 
     QuarkusTransaction.requiringNew()
         .run(
@@ -753,7 +755,7 @@ class TransacaoResourceTest {
             "10.0000",
             LocalDate.now(FUSO_USUARIO).plusDays(1))
         .statusCode(422)
-        .body("codigo", equalTo("DATA_FINANCEIRA_FUTURA"));
+        .body("type", equalTo("urn:economize:problem:DATA_FINANCEIRA_FUTURA"));
     alterarTransacao(
             token,
             transacaoId,
@@ -766,7 +768,7 @@ class TransacaoResourceTest {
             "10.0000",
             LocalDate.of(2026, 1, 31))
         .statusCode(422)
-        .body("codigo", equalTo("DATA_FINANCEIRA_ANTERIOR_SALDO_INICIAL"));
+        .body("type", equalTo("urn:economize:problem:DATA_FINANCEIRA_ANTERIOR_SALDO_INICIAL"));
   }
 
   @Test
@@ -795,7 +797,7 @@ class TransacaoResourceTest {
             "10.0000",
             LocalDate.now(FUSO_USUARIO))
         .statusCode(404)
-        .body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+        .body("type", equalTo("urn:economize:problem:RECURSO_NAO_ENCONTRADO"));
 
     var token = autenticar();
     var transferenciaId = criarTransferencia(token);
@@ -816,7 +818,7 @@ class TransacaoResourceTest {
             "10.0000",
             LocalDate.now(FUSO_USUARIO))
         .statusCode(422)
-        .body("codigo", equalTo("TRANSACAO_NAO_SIMPLES"));
+        .body("type", equalTo("urn:economize:problem:TRANSACAO_NAO_SIMPLES"));
   }
 
   @Test
@@ -867,7 +869,7 @@ class TransacaoResourceTest {
             "10.0000",
             hoje)
         .statusCode(404)
-        .body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+        .body("type", equalTo("urn:economize:problem:RECURSO_NAO_ENCONTRADO"));
     alterarTransacao(
             token,
             transacaoId,
@@ -880,7 +882,7 @@ class TransacaoResourceTest {
             "10.0000",
             hoje)
         .statusCode(404)
-        .body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+        .body("type", equalTo("urn:economize:problem:RECURSO_NAO_ENCONTRADO"));
     alterarTransacao(
             token,
             transacaoId,
@@ -893,7 +895,7 @@ class TransacaoResourceTest {
             "10.0000",
             hoje)
         .statusCode(404)
-        .body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+        .body("type", equalTo("urn:economize:problem:RECURSO_NAO_ENCONTRADO"));
     alterarTransacao(
             token,
             transacaoId,
@@ -906,7 +908,7 @@ class TransacaoResourceTest {
             "10.0000",
             hoje)
         .statusCode(404)
-        .body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+        .body("type", equalTo("urn:economize:problem:RECURSO_NAO_ENCONTRADO"));
   }
 
   @Test
@@ -966,7 +968,7 @@ class TransacaoResourceTest {
             "10.0000",
             LocalDate.now(FUSO_USUARIO))
         .statusCode(422)
-        .body("codigo", equalTo("TRANSACAO_NAO_SIMPLES"));
+        .body("type", equalTo("urn:economize:problem:TRANSACAO_NAO_SIMPLES"));
   }
 
   @Test
@@ -984,7 +986,7 @@ class TransacaoResourceTest {
             "10.0000",
             hoje)
         .statusCode(404)
-        .body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+        .body("type", equalTo("urn:economize:problem:RECURSO_NAO_ENCONTRADO"));
 
     given()
         .contentType("application/json")
@@ -1216,8 +1218,8 @@ class TransacaoResourceTest {
         .get("/api/transacoes")
         .then()
         .statusCode(400)
-        .body("codigo", equalTo("DADOS_INVALIDOS"))
-        .body("campos.periodo", notNullValue());
+        .body("type", equalTo("urn:economize:problem:DADOS_INVALIDOS"))
+        .body("errors.find { it.field == 'periodo' }.detail", notNullValue());
 
     requisicaoConsulta(autenticar())
         .queryParam("inicio", "2026-01")
@@ -1225,8 +1227,8 @@ class TransacaoResourceTest {
         .get("/api/transacoes")
         .then()
         .statusCode(400)
-        .body("codigo", equalTo("DADOS_INVALIDOS"))
-        .body("campos.periodo", notNullValue());
+        .body("type", equalTo("urn:economize:problem:DADOS_INVALIDOS"))
+        .body("errors.find { it.field == 'periodo' }.detail", notNullValue());
 
     given()
         .auth()
@@ -1258,7 +1260,7 @@ class TransacaoResourceTest {
         .get("/api/transacoes")
         .then()
         .statusCode(404)
-        .body("codigo", equalTo("RECURSO_NAO_ENCONTRADO"));
+        .body("type", equalTo("urn:economize:problem:RECURSO_NAO_ENCONTRADO"));
 
     given()
         .auth()
@@ -1291,7 +1293,7 @@ class TransacaoResourceTest {
         .get("/api/transacoes")
         .then()
         .statusCode(400)
-        .body("campos.inicio", equalTo("Valor invalido"));
+        .body("errors.find { it.field == 'inicio' }.detail", equalTo("Valor invalido"));
   }
 
   @Test

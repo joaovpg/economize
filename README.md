@@ -20,6 +20,7 @@ O repositório contém:
 - consulta mensal unificada de Transações com filtros, impactos assinados, itens de saldo inicial e Saldo de abertura;
 - criação, alteração, efetivação, replanejamento e exclusão atômica de Transferências simples, sem Categoria e exibidas por seus dois lados na consulta unificada;
 - infraestrutura REST e OpenAPI configurada, além de dependências planejadas para mapeamentos, integrações e métricas.
+- erros HTTP padronizados como `application/problem+json` segundo a RFC 9457, com tipos `urn:economize:problem:<codigo>` e detalhes de validação em `errors`.
 
 O próximo marco implementa o Motor de recorrência. Consulte o [roadmap](docs/roadmap.md) para todas as entregas planejadas.
 
@@ -206,6 +207,25 @@ A validação usada pela CI é:
 ```
 
 Os testes permanecem isolados do banco local. Eles dependem de um runtime de contêiner disponível para o Quarkus Dev Services iniciar um PostgreSQL temporário.
+
+## Erros HTTP
+
+As respostas de erro seguem o formato [RFC 9457](https://datatracker.ietf.org/doc/html/rfc9457) e usam o media type `application/problem+json`:
+
+```json
+{
+  "type": "urn:economize:problem:DADOS_INVALIDOS",
+  "title": "Dados invalidos",
+  "status": 400,
+  "detail": "Um ou mais campos sao invalidos",
+  "instance": "/api/transacoes",
+  "errors": [
+    { "field": "dataFinanceira", "detail": "deve ser informada" }
+  ]
+}
+```
+
+O código do problema é identificado pelo sufixo de `type`. O campo `errors` só aparece quando há erros associados a campos. Não são publicados aliases legados como `codigo`, `mensagem` ou `campos`.
 
 ## Configuração
 

@@ -1,4 +1,4 @@
-package com.joaovpg.economize.shared;
+package com.joaovpg.economize.shared.exception;
 
 public class RecursoNaoEncontradoException extends RuntimeException {
   private final String codigo;

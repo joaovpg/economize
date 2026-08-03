@@ -1,4 +1,6 @@
 quarkus:
+  default-locale: pt-BR
+  locales: pt-BR
   datasource:
     db-kind: postgresql
   flyway:

@@ -3,7 +3,7 @@ package com.joaovpg.economize.categoria.application;
 import com.joaovpg.economize.categoria.Categoria;
 import com.joaovpg.economize.categoria.CategoriaRepository;
 import com.joaovpg.economize.categoria.SituacaoCategoria;
-import com.joaovpg.economize.shared.RegraNegocioException;
+import com.joaovpg.economize.shared.exception.RegraNegocioException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import java.util.UUID;

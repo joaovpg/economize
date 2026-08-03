@@ -2,7 +2,7 @@ package com.joaovpg.economize.conta.application;
 
 import com.joaovpg.economize.conta.ContaFinanceiraRepository;
 import com.joaovpg.economize.conta.SituacaoConta;
-import com.joaovpg.economize.shared.RegraNegocioException;
+import com.joaovpg.economize.shared.exception.RegraNegocioException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;

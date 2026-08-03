@@ -1,10 +1,11 @@
 package com.joaovpg.economize.usuario;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.anEmptyMap;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 import io.quarkus.test.junit.QuarkusTest;
 import java.util.UUID;
@@ -116,8 +117,9 @@ class CadastrarUsuarioResourceTest {
         .post("/api/autenticacao/cadastro")
         .then()
         .statusCode(422)
-        .body("codigo", equalTo("EMAIL_JA_CADASTRADO"))
-        .body("campos", anEmptyMap());
+        .contentType("application/problem+json")
+        .body("type", equalTo("urn:economize:problem:EMAIL_JA_CADASTRADO"))
+        .body("errors", nullValue());
   }
 
   @Test
@@ -137,11 +139,12 @@ class CadastrarUsuarioResourceTest {
         .post("/api/autenticacao/cadastro")
         .then()
         .statusCode(400)
-        .body("codigo", equalTo("DADOS_INVALIDOS"))
-        .body("campos.nome", notNullValue())
-        .body("campos.email", notNullValue())
-        .body("campos.senha", notNullValue())
-        .body("campos.timezone", notNullValue());
+        .contentType("application/problem+json")
+        .body("type", equalTo("urn:economize:problem:DADOS_INVALIDOS"))
+        .body("errors.field", hasItems("nome", "email", "senha", "timezone"))
+        .body(
+            "errors.find { it.field == 'email' }.detail",
+            equalTo("deve ser um endereço de e-mail bem formado"));
 
     rejeitarTimezone("EST");
     rejeitarTimezone("Etc/GMT+3");
@@ -165,6 +168,23 @@ class CadastrarUsuarioResourceTest {
         .post("/api/autenticacao/cadastro")
         .then()
         .statusCode(400)
-        .body("campos.timezone", notNullValue());
+        .contentType("application/problem+json")
+        .body("errors.find { it.field == 'timezone' }.detail", notNullValue());
+  }
+
+  @Test
+  void mapeiaJsonInvalidoComoProblemDetail() {
+    given()
+        .contentType("application/json")
+        .body("{\"nome\":")
+        .when()
+        .post("/api/autenticacao/cadastro")
+        .then()
+        .statusCode(400)
+        .contentType("application/problem+json")
+        .body("status", equalTo(400))
+        .body("type", equalTo("urn:economize:problem:JSON_MALFORMADO"))
+        .body("title", equalTo("JSON invalido"))
+        .body("detail", equalTo("O corpo da requisicao contem um JSON malformado"));
   }
 }

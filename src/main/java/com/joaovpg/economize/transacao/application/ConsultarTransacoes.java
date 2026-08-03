@@ -3,7 +3,8 @@ package com.joaovpg.economize.transacao.application;
 import com.joaovpg.economize.categoria.CategoriaRepository;
 import com.joaovpg.economize.conta.ContaFinanceira;
 import com.joaovpg.economize.conta.ContaFinanceiraRepository;
-import com.joaovpg.economize.shared.RecursoNaoEncontradoException;
+import com.joaovpg.economize.shared.exception.RecursoNaoEncontradoException;
+import com.joaovpg.economize.shared.exception.ValidacaoException;
 import com.joaovpg.economize.transacao.OrigemItemConsulta;
 import com.joaovpg.economize.transacao.SituacaoTransacao;
 import com.joaovpg.economize.transacao.TipoTransacao;
@@ -194,18 +195,15 @@ public class ConsultarTransacoes {
 
   private Periodo resolverPeriodo(YearMonth inicio, YearMonth fim) {
     if (inicio == null || fim == null) {
-      throw new ConsultaTransacoesInvalidaException(
-          "periodo", "Inicio e fim devem ser informados juntos");
+      throw new ValidacaoException("periodo", "Inicio e fim devem ser informados juntos");
     }
 
     if (inicio.isAfter(fim)) {
-      throw new ConsultaTransacoesInvalidaException(
-          "periodo", "Inicio deve ser anterior ou igual ao fim");
+      throw new ValidacaoException("periodo", "Inicio deve ser anterior ou igual ao fim");
     }
 
     if (ChronoUnit.MONTHS.between(inicio, fim) + 1 > MAXIMO_MESES) {
-      throw new ConsultaTransacoesInvalidaException(
-          "periodo", "O periodo deve ter no maximo 12 meses");
+      throw new ValidacaoException("periodo", "O periodo deve ter no maximo 12 meses");
     }
 
     return new Periodo(inicio, fim);

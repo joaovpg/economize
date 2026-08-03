@@ -1,7 +1,7 @@
 package com.joaovpg.economize.transacao.http;
 
+import com.joaovpg.economize.shared.exception.ValidacaoException;
 import com.joaovpg.economize.transacao.application.AlterarTransacao;
-import com.joaovpg.economize.transacao.application.ConsultaTransacoesInvalidaException;
 import com.joaovpg.economize.transacao.application.ConsultarTransacoes;
 import com.joaovpg.economize.transacao.application.CriarTransacao;
 import com.joaovpg.economize.transacao.application.ExcluirTransacao;
@@ -79,7 +79,7 @@ public class TransacaoResource {
     try {
       return conversor.apply(valor);
     } catch (IllegalArgumentException | DateTimeException exception) {
-      throw new ConsultaTransacoesInvalidaException(campo, "Valor invalido");
+      throw new ValidacaoException(campo, "Valor invalido");
     }
   }
 

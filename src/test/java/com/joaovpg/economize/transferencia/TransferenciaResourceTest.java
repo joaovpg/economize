@@ -209,10 +209,10 @@ class TransferenciaResourceTest {
     var data = LocalDate.now();
     criarTransferenciaComContas(contaOrigemId, contaOrigemId, "PLANEJADA", data)
         .statusCode(422)
-        .body("codigo", equalTo("CONTAS_TRANSFERENCIA_IGUAIS"));
+        .body("type", equalTo("urn:economize:problem:CONTAS_TRANSFERENCIA_IGUAIS"));
     criarTransferencia("EFETIVADA", data.plusDays(1))
         .statusCode(422)
-        .body("codigo", equalTo("DATA_FINANCEIRA_FUTURA"));
+        .body("type", equalTo("urn:economize:problem:DATA_FINANCEIRA_FUTURA"));
 
     var transferenciaId =
         criarTransferencia("PLANEJADA", data).statusCode(201).extract().jsonPath().getUUID("id");

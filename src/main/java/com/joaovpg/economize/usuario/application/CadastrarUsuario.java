@@ -1,6 +1,6 @@
 package com.joaovpg.economize.usuario.application;
 
-import com.joaovpg.economize.shared.RegraNegocioException;
+import com.joaovpg.economize.shared.exception.RegraNegocioException;
 import com.joaovpg.economize.usuario.StatusUsuario;
 import com.joaovpg.economize.usuario.Usuario;
 import com.joaovpg.economize.usuario.UsuarioRepository;

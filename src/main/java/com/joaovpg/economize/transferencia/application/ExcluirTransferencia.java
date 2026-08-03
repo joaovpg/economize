@@ -1,6 +1,6 @@
 package com.joaovpg.economize.transferencia.application;
 
-import com.joaovpg.economize.shared.RecursoNaoEncontradoException;
+import com.joaovpg.economize.shared.exception.RecursoNaoEncontradoException;
 import com.joaovpg.economize.transacao.TransacaoRepository;
 import com.joaovpg.economize.transferencia.TransferenciaRepository;
 import jakarta.enterprise.context.ApplicationScoped;
