@@ -16,6 +16,12 @@ quarkus:
   swagger-ui:
     path: /q/swagger-ui
     always-include: true
+  log:
+    console:
+      format: "%d{HH:mm:ss} %-5p [%c] (traceId=%X{traceId} usuarioId=%X{usuarioId}) %s%e%n"
+    category:
+      "http-problem":
+        level: WARN
 
 mp:
   jwt:
@@ -27,6 +33,10 @@ smallrye:
     new-token:
       issuer: economize
       lifespan: ${JWT_EXPIRACAO_SEGUNDOS:900}
+
+economize:
+  logging:
+    threshold-millis: ${LOG_LIMITE_REQUISICAO_LENTA:1000}
 
 "%test":
   quarkus:
@@ -47,6 +57,10 @@ smallrye:
 
 "%prod":
   quarkus:
+    log:
+      console:
+        json:
+          enabled: true
     datasource:
       username: ${DB_USERNAME}
       password: ${DB_PASSWORD}

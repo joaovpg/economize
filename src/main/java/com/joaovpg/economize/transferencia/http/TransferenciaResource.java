@@ -1,5 +1,6 @@
 package com.joaovpg.economize.transferencia.http;
 
+import com.joaovpg.economize.shared.http.LogHttpErrors;
 import com.joaovpg.economize.transferencia.application.AlterarTransferencia;
 import com.joaovpg.economize.transferencia.application.CriarTransferencia;
 import com.joaovpg.economize.transferencia.application.ExcluirTransferencia;
@@ -20,6 +21,7 @@ import java.util.UUID;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 @Path("/transferencias")
+@LogHttpErrors
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @RolesAllowed("usuario")

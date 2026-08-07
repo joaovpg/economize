@@ -25,10 +25,14 @@
 - **Segmento de recorrencia**: trecho independente de uma recorrencia governado por uma RRULE.
 - **Ocorrencia recorrente**: instancia financeira prevista por um Segmento de recorrencia, virtual enquanto apenas projetada e persistida quando efetivada ou individualizada.
 - **Excecao recorrente**: ocorrencia persistida ou supressao que deixa de seguir os dados do Segmento sem perder a identidade de sua origem.
+- **Tipo de grupo**: classificacao do plano como `RECORRENCIA` ou `PARCELAMENTO`; os dois usam segmentos, mas somente o segundo possui numeracao de parcelas.
+- **Data original da ocorrencia**: data produzida pela RRULE que identifica uma ocorrencia junto com o Segmento, mesmo quando a Data financeira de uma excecao e alterada.
+- **Supressao de recorrencia**: registro da ausencia intencional de uma ocorrencia virtual; nao e uma Transacao. A exclusao explicita de uma Transacao materializada pode criar a Supressao atomicamente para impedir seu reaparecimento.
+- **Escopo de edicao**: alcance da alteracao de uma ocorrencia, `ONLY_THIS` ou `THIS_AND_FUTURE`; o segundo so vale para ocorrencia virtual.
 - **Parcelamento**: plano financeiro finito composto por parcelas numeradas, com valor por parcela e quantidade total original definidos na criacao.
 - **Parcela**: ocorrencia numerada de um Parcelamento, virtual enquanto apenas projetada e persistida quando efetivada ou individualizada.
-- **Total contratado original**: valor por parcela multiplicado pela quantidade total original de um Parcelamento, preservado mesmo depois de edicoes ou cancelamentos.
-- **Total atual do parcelamento**: soma derivada das parcelas existentes de um Parcelamento depois de edicoes e cancelamentos.
+- **Total contratado original**: valor por parcela multiplicado pela quantidade total original de um Parcelamento, derivado sob demanda a partir dos dados preservados e nao persistido nesta entrega.
+- **Total atual do parcelamento**: soma derivada das parcelas existentes; nao e calculada nem exposta pelo contrato atual.
 
 ## Convencoes de linguagem
 

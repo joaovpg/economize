@@ -6,6 +6,7 @@ import com.joaovpg.economize.categoria.application.EditarCategoria;
 import com.joaovpg.economize.categoria.application.ListarCategorias;
 import com.joaovpg.economize.categoria.http.dto.request.CadastrarCategoriaRequest;
 import com.joaovpg.economize.categoria.http.dto.request.EditarCategoriaRequest;
+import com.joaovpg.economize.shared.http.LogHttpErrors;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
@@ -22,6 +23,7 @@ import java.util.UUID;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 @Path("/categorias")
+@LogHttpErrors
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @RolesAllowed("usuario")

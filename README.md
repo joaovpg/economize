@@ -227,6 +227,10 @@ As respostas de erro seguem o formato [RFC 9457](https://datatracker.ietf.org/do
 
 O código do problema é identificado pelo sufixo de `type`. O campo `errors` só aparece quando há erros associados a campos. Não são publicados aliases legados como `codigo`, `mensagem` ou `campos`.
 
+## Logs
+
+A API registra cada requisição no console com método, rota template, status, duração, `traceId` e, quando disponível, `usuarioId`. Corpos, query strings, valores de path, credenciais e dados financeiros não são registrados. Em produção, os eventos usam JSON; em desenvolvimento, usam texto legível. Respostas 4xx são `WARN`, erros 5xx são `ERROR` com stack trace e requisições acima de `LOG_LIMITE_REQUISICAO_LENTA` (padrão `1000` ms) recebem um `WARN` adicional.
+
 ## Configuração
 
 Nos profiles `dev` e `prod`, configure o datasource pelas variáveis abaixo. O profile `test` permanece isolado e usa um PostgreSQL temporário fornecido pelo Dev Services.

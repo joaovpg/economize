@@ -17,6 +17,7 @@
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.5.6</surefire-plugin.version>
         <org.mapstruct.version>1.6.3</org.mapstruct.version>
+        <ical4j.version>4.3.0</ical4j.version>
         <spotless.version>3.9.0</spotless.version>
         <google-java-format.version>1.35.0</google-java-format.version>
     </properties>
@@ -110,6 +111,15 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-config-yaml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mnode.ical4j</groupId>
+            <artifactId>ical4j</artifactId>
+            <version>${ical4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-logging-json</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>

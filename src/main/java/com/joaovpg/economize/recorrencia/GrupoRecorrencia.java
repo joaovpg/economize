@@ -1,5 +1,7 @@
 package com.joaovpg.economize.recorrencia;
 
+import com.joaovpg.economize.recorrencia.enums.StatusRecorrencia;
+import com.joaovpg.economize.recorrencia.enums.TipoGrupoRecorrencia;
 import com.joaovpg.economize.shared.persistence.EntidadeBase;
 import com.joaovpg.economize.usuario.Usuario;
 import jakarta.persistence.Column;
@@ -26,6 +28,10 @@ public class GrupoRecorrencia extends EntidadeBase {
 
   @Column(name = "STR_DESCRICAO", nullable = false)
   private String descricao;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "STR_TIPO", nullable = false, length = 20)
+  private TipoGrupoRecorrencia tipo = TipoGrupoRecorrencia.RECORRENCIA;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "STR_STATUS", nullable = false, length = 20)

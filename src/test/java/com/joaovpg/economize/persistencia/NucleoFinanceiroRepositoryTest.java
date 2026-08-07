@@ -15,7 +15,7 @@ import com.joaovpg.economize.recorrencia.GrupoRecorrencia;
 import com.joaovpg.economize.recorrencia.GrupoRecorrenciaRepository;
 import com.joaovpg.economize.recorrencia.SegmentoRecorrencia;
 import com.joaovpg.economize.recorrencia.SegmentoRecorrenciaRepository;
-import com.joaovpg.economize.recorrencia.StatusRecorrencia;
+import com.joaovpg.economize.recorrencia.enums.StatusRecorrencia;
 import com.joaovpg.economize.transacao.SituacaoTransacao;
 import com.joaovpg.economize.transacao.TipoTransacao;
 import com.joaovpg.economize.transacao.Transacao;

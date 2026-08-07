@@ -25,6 +25,28 @@ public class TransacaoRepository implements PanacheRepositoryBase<Transacao, UUI
         .firstResultOptional();
   }
 
+  public Optional<Transacao> buscarOcorrenciaDoUsuarioParaEdicao(
+      UUID segmentoId, LocalDate identificador, UUID usuarioId) {
+    return find(
+            "segmentoRecorrencia.id = ?1 and identificadorRecorrencia = ?2 and usuario.id = ?3",
+            segmentoId,
+            identificador,
+            usuarioId)
+        .withLock(LockModeType.PESSIMISTIC_WRITE)
+        .firstResultOptional();
+  }
+
+  public List<Transacao> listarOcorrenciasDoSegmentoAPartirDe(
+      UUID segmentoId, LocalDate inicio, UUID usuarioId) {
+    return find(
+            "segmentoRecorrencia.id = ?1 and identificadorRecorrencia >= ?2 and usuario.id = ?3"
+                + " order by identificadorRecorrencia, id",
+            segmentoId,
+            inicio,
+            usuarioId)
+        .list();
+  }
+
   public boolean estaVinculadaATransferencia(UUID transacaoId) {
     return getEntityManager()
             .createQuery(
@@ -51,6 +73,80 @@ public class TransacaoRepository implements PanacheRepositoryBase<Transacao, UUI
             + String.join(" and ", filtros)
             + " order by t.dataFinanceira, t.id";
     var consulta = getEntityManager().createQuery(hql, Transacao.class);
+    parametros.forEach(consulta::setParameter);
+    return consulta.getResultList();
+  }
+
+  public List<Transacao> consultarRecorrentes(
+      UUID usuarioId, LocalDate inicio, LocalDate fim, Set<UUID> contaIds, Set<UUID> categoriaIds) {
+    var filtros = new ArrayList<String>();
+    var parametros = new HashMap<String, Object>();
+    filtros.add("t.usuario.id = :usuarioId");
+    filtros.add("t.segmentoRecorrencia is not null");
+    filtros.add("t.tipo in :tiposFinanceiros");
+    filtros.add("t.dataFinanceira between :inicio and :fim");
+    parametros.put("usuarioId", usuarioId);
+    parametros.put("tiposFinanceiros", Set.of(TipoTransacao.RECEITA, TipoTransacao.DESPESA));
+    parametros.put("inicio", inicio);
+    parametros.put("fim", fim);
+    adicionarFiltrosContaCategoria(filtros, parametros, contaIds, categoriaIds);
+    return executarConsulta(filtros, parametros);
+  }
+
+  public List<Transacao> consultarRecorrentesAte(
+      UUID usuarioId, LocalDate fim, Set<UUID> contaIds, Set<UUID> categoriaIds) {
+    var filtros = new ArrayList<String>();
+    var parametros = new HashMap<String, Object>();
+    filtros.add("t.usuario.id = :usuarioId");
+    filtros.add("t.segmentoRecorrencia is not null");
+    filtros.add("t.tipo in :tiposFinanceiros");
+    filtros.add("t.dataFinanceira <= :fim");
+    parametros.put("usuarioId", usuarioId);
+    parametros.put("tiposFinanceiros", Set.of(TipoTransacao.RECEITA, TipoTransacao.DESPESA));
+    parametros.put("fim", fim);
+    adicionarFiltrosContaCategoria(filtros, parametros, contaIds, categoriaIds);
+    return executarConsulta(filtros, parametros);
+  }
+
+  public List<Transacao> consultarRecorrentesDosSegmentos(UUID usuarioId, Set<UUID> segmentoIds) {
+    if (segmentoIds.isEmpty()) {
+      return List.of();
+    }
+    var filtros = new ArrayList<String>();
+    var parametros = new HashMap<String, Object>();
+    filtros.add("t.usuario.id = :usuarioId");
+    filtros.add("t.segmentoRecorrencia.id in :segmentoIds");
+    filtros.add("t.tipo in :tiposFinanceiros");
+    parametros.put("usuarioId", usuarioId);
+    parametros.put("segmentoIds", segmentoIds);
+    parametros.put("tiposFinanceiros", Set.of(TipoTransacao.RECEITA, TipoTransacao.DESPESA));
+    return executarConsulta(filtros, parametros);
+  }
+
+  private void adicionarFiltrosContaCategoria(
+      List<String> filtros,
+      Map<String, Object> parametros,
+      Set<UUID> contaIds,
+      Set<UUID> categoriaIds) {
+    if (!contaIds.isEmpty()) {
+      filtros.add("t.conta.id in :contaIds");
+      parametros.put("contaIds", contaIds);
+    }
+    if (!categoriaIds.isEmpty()) {
+      filtros.add("t.categoria.id in :categoriaIds");
+      parametros.put("categoriaIds", categoriaIds);
+    }
+  }
+
+  private List<Transacao> executarConsulta(List<String> filtros, Map<String, Object> parametros) {
+    var consulta =
+        getEntityManager()
+            .createQuery(
+                "select t from Transacao t join fetch t.segmentoRecorrencia "
+                    + "left join fetch t.grupoRecorrencia where "
+                    + String.join(" and ", filtros)
+                    + " order by t.dataFinanceira, t.id",
+                Transacao.class);
     parametros.forEach(consulta::setParameter);
     return consulta.getResultList();
   }

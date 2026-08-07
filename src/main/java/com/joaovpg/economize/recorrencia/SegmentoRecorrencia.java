@@ -2,6 +2,7 @@ package com.joaovpg.economize.recorrencia;
 
 import com.joaovpg.economize.categoria.Categoria;
 import com.joaovpg.economize.conta.ContaFinanceira;
+import com.joaovpg.economize.recorrencia.enums.StatusRecorrencia;
 import com.joaovpg.economize.shared.persistence.EntidadeBase;
 import com.joaovpg.economize.transacao.TipoTransacao;
 import com.joaovpg.economize.usuario.Usuario;
@@ -57,11 +58,20 @@ public class SegmentoRecorrencia extends EntidadeBase {
   @Column(name = "DAT_DTSTART", nullable = false)
   private LocalDate inicio;
 
+  @Column(name = "DAT_FIM")
+  private LocalDate fim;
+
   @Column(name = "STR_RRULE", nullable = false, length = 500)
   private String rrule;
 
   @Column(name = "INT_TOTAL_OCORRENCIAS")
   private Integer totalOcorrencias;
+
+  @Column(name = "INT_NUMERO_PRIMEIRA_PARCELA")
+  private Integer numeroPrimeiraParcela;
+
+  @Column(name = "INT_QUANTIDADE_TOTAL_ORIGINAL")
+  private Integer quantidadeTotalOriginal;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "STR_STATUS", nullable = false, length = 20)

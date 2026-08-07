@@ -1,5 +1,6 @@
 package com.joaovpg.economize.transacao.http.dto.response;
 
+import com.joaovpg.economize.recorrencia.enums.PoliticaDataOcorrencia;
 import com.joaovpg.economize.transacao.OrigemItemConsulta;
 import com.joaovpg.economize.transacao.SituacaoTransacao;
 import java.math.BigDecimal;
@@ -22,5 +23,12 @@ public record ConsultaTransacoesResponse(
       Instant efetivadoEm,
       UUID contaId,
       UUID categoriaId,
-      UUID contaContraparteId) {}
+      UUID contaContraparteId,
+      UUID grupoRecorrenciaId,
+      UUID segmentoRecorrenciaId,
+      LocalDate dataOriginalRecorrencia,
+      Integer numeroParcela,
+      String rrule,
+      LocalDate inicioRecorrencia,
+      PoliticaDataOcorrencia politicaDataOcorrencia) {}
 }
