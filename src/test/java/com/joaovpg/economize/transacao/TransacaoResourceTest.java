@@ -21,7 +21,7 @@ import com.joaovpg.economize.conta.ContaFinanceira;
 import com.joaovpg.economize.conta.ContaFinanceiraRepository;
 import com.joaovpg.economize.recorrencia.GrupoRecorrencia;
 import com.joaovpg.economize.recorrencia.GrupoRecorrenciaRepository;
-import com.joaovpg.economize.recorrencia.StatusRecorrencia;
+import com.joaovpg.economize.recorrencia.enums.StatusRecorrencia;
 import com.joaovpg.economize.transferencia.TransferenciaRepository;
 import com.joaovpg.economize.usuario.StatusUsuario;
 import com.joaovpg.economize.usuario.Usuario;
@@ -329,7 +329,9 @@ class TransacaoResourceTest {
         .then()
         .statusCode(401)
         .contentType("application/problem+json")
-        .body("type", equalTo("urn:economize:problem:CREDENCIAIS_INVALIDAS"));
+        .body("type", equalTo("urn:economize:problem:CREDENCIAIS_INVALIDAS"))
+        .body("traceId", matchesPattern("[0-9a-f-]{36}"))
+        .header("X-Trace-Id", matchesPattern("[0-9a-f-]{36}"));
   }
 
   @Test

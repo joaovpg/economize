@@ -3,11 +3,17 @@ package com.joaovpg.economize.transacao.application;
 import com.joaovpg.economize.categoria.CategoriaRepository;
 import com.joaovpg.economize.conta.ContaFinanceira;
 import com.joaovpg.economize.conta.ContaFinanceiraRepository;
+import com.joaovpg.economize.recorrencia.SegmentoRecorrencia;
+import com.joaovpg.economize.recorrencia.SegmentoRecorrenciaRepository;
+import com.joaovpg.economize.recorrencia.SupressaoRecorrenciaRepository;
+import com.joaovpg.economize.recorrencia.application.ResolverOcorrenciasRecorrentes;
+import com.joaovpg.economize.recorrencia.enums.PoliticaDataOcorrencia;
 import com.joaovpg.economize.shared.exception.RecursoNaoEncontradoException;
 import com.joaovpg.economize.shared.exception.ValidacaoException;
 import com.joaovpg.economize.transacao.OrigemItemConsulta;
 import com.joaovpg.economize.transacao.SituacaoTransacao;
 import com.joaovpg.economize.transacao.TipoTransacao;
+import com.joaovpg.economize.transacao.Transacao;
 import com.joaovpg.economize.transacao.TransacaoRepository;
 import com.joaovpg.economize.transferencia.Transferencia;
 import com.joaovpg.economize.transferencia.TransferenciaRepository;
@@ -36,18 +42,27 @@ public class ConsultarTransacoes {
   private final CategoriaRepository categoriaRepository;
   private final TransacaoRepository transacaoRepository;
   private final TransferenciaRepository transferenciaRepository;
+  private final SegmentoRecorrenciaRepository segmentoRepository;
+  private final SupressaoRecorrenciaRepository supressaoRepository;
+  private final ResolverOcorrenciasRecorrentes resolverOcorrencias;
 
   public ConsultarTransacoes(
       UsuarioRepository usuarioRepository,
       ContaFinanceiraRepository contaRepository,
       CategoriaRepository categoriaRepository,
       TransacaoRepository transacaoRepository,
-      TransferenciaRepository transferenciaRepository) {
+      TransferenciaRepository transferenciaRepository,
+      SegmentoRecorrenciaRepository segmentoRepository,
+      SupressaoRecorrenciaRepository supressaoRepository,
+      ResolverOcorrenciasRecorrentes resolverOcorrencias) {
     this.usuarioRepository = usuarioRepository;
     this.contaRepository = contaRepository;
     this.categoriaRepository = categoriaRepository;
     this.transacaoRepository = transacaoRepository;
     this.transferenciaRepository = transferenciaRepository;
+    this.segmentoRepository = segmentoRepository;
+    this.supressaoRepository = supressaoRepository;
+    this.resolverOcorrencias = resolverOcorrencias;
   }
 
   @Transactional(Transactional.TxType.SUPPORTS)
@@ -79,6 +94,37 @@ public class ConsultarTransacoes {
             periodo.ultimoDia(),
             contaIds,
             categoriaIds);
+
+    var segmentos =
+        segmentoRepository.consultarProjetaveis(
+            comando.usuarioId(),
+            periodo.primeiroDia(),
+            periodo.ultimoDia(),
+            contaIds,
+            categoriaIds);
+
+    var transacoesRecorrentes =
+        unirTransacoesRecorrentes(
+            transacaoRepository.consultarRecorrentes(
+                comando.usuarioId(),
+                periodo.primeiroDia(),
+                periodo.ultimoDia(),
+                contaIds,
+                categoriaIds),
+            transacaoRepository.consultarRecorrentesDosSegmentos(
+                comando.usuarioId(), idsSegmentos(segmentos)));
+
+    var recorrenciasItens =
+        resolverOcorrencias
+            .resolver(
+                segmentos,
+                transacoesRecorrentes,
+                supressoes(segmentos, comando.usuarioId()),
+                periodo.primeiroDia(),
+                periodo.ultimoDia())
+            .stream()
+            .filter(resultado -> atendeFiltros(resultado, contaIds, categoriaIds))
+            .toList();
     var incluirTransferencias = categoriaIds.isEmpty();
     var transferencias =
         incluirTransferencias
@@ -91,6 +137,7 @@ public class ConsultarTransacoes {
             .filter(conta -> !conta.getDataSaldoInicial().isAfter(periodo.dataSaldoAbertura()))
             .map(ContaFinanceira::getSaldoInicial)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
+
     var impactoAnterior =
         transacaoRepository.somarImpactoSimplesAte(
             comando.usuarioId(), periodo.dataSaldoAbertura(), contaIds, categoriaIds);
@@ -99,6 +146,29 @@ public class ConsultarTransacoes {
             ? transferenciaRepository.somarImpactoAte(
                 comando.usuarioId(), periodo.dataSaldoAbertura(), contaIds)
             : BigDecimal.ZERO;
+    var segmentosAnteriores =
+        segmentoRepository.consultarProjetaveisAte(
+            comando.usuarioId(), periodo.dataSaldoAbertura(), contaIds, categoriaIds);
+
+    var transacoesRecorrentesAnteriores =
+        unirTransacoesRecorrentes(
+            transacaoRepository.consultarRecorrentesAte(
+                comando.usuarioId(), periodo.dataSaldoAbertura(), contaIds, categoriaIds),
+            transacaoRepository.consultarRecorrentesDosSegmentos(
+                comando.usuarioId(), idsSegmentos(segmentosAnteriores)));
+
+    var impactoRecorrenciasAnterior =
+        resolverOcorrencias
+            .resolver(
+                segmentosAnteriores,
+                transacoesRecorrentesAnteriores,
+                supressoes(segmentosAnteriores, comando.usuarioId()),
+                null,
+                periodo.dataSaldoAbertura())
+            .stream()
+            .filter(resultado -> atendeFiltros(resultado, contaIds, categoriaIds))
+            .map(ResolverOcorrenciasRecorrentes.Resultado::valor)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
 
     var itens = new ArrayList<Item>();
     transacoes.stream()
@@ -154,6 +224,8 @@ public class ConsultarTransacoes {
           }
         });
 
+    recorrenciasItens.stream().map(this::item).forEach(itens::add);
+
     contas.stream()
         .filter(conta -> !conta.getDataSaldoInicial().isBefore(periodo.primeiroDia()))
         .filter(conta -> !conta.getDataSaldoInicial().isAfter(periodo.ultimoDia()))
@@ -178,7 +250,11 @@ public class ConsultarTransacoes {
         Comparator.comparing(Item::dataFinanceira)
             .thenComparingInt(
                 item -> item.origem() == OrigemItemConsulta.SALDO_INICIAL_CONTA ? 0 : 1)
-            .thenComparing(Item::operacaoId)
+            .thenComparing(Item::operacaoId, Comparator.nullsFirst(Comparator.naturalOrder()))
+            .thenComparing(
+                Item::segmentoRecorrenciaId, Comparator.nullsFirst(Comparator.naturalOrder()))
+            .thenComparing(
+                Item::dataOriginalRecorrencia, Comparator.nullsFirst(Comparator.naturalOrder()))
             .thenComparingInt(
                 item ->
                     item.origem() == OrigemItemConsulta.TRANSFERENCIA && item.valor().signum() > 0
@@ -189,8 +265,74 @@ public class ConsultarTransacoes {
     return new Resultado(
         periodo.inicio(),
         periodo.fim(),
-        monetario(saldoInicial.add(impactoAnterior).add(impactoTransferenciasAnterior)),
+        monetario(
+            saldoInicial
+                .add(impactoAnterior)
+                .add(impactoTransferenciasAnterior)
+                .add(impactoRecorrenciasAnterior)),
         List.copyOf(itens));
+  }
+
+  private List<com.joaovpg.economize.recorrencia.SupressaoRecorrencia> supressoes(
+      List<SegmentoRecorrencia> segmentos, UUID usuarioId) {
+    return supressaoRepository.listarDoUsuarioNosSegmentos(
+        usuarioId,
+        segmentos.stream()
+            .map(SegmentoRecorrencia::getId)
+            .collect(java.util.stream.Collectors.toSet()));
+  }
+
+  private Set<UUID> idsSegmentos(List<SegmentoRecorrencia> segmentos) {
+    return segmentos.stream()
+        .map(SegmentoRecorrencia::getId)
+        .collect(java.util.stream.Collectors.toSet());
+  }
+
+  private List<Transacao> unirTransacoesRecorrentes(
+      List<Transacao> porDataFinanceira, List<Transacao> porSegmento) {
+    var ids = new LinkedHashSet<UUID>();
+    var resultado = new ArrayList<Transacao>();
+    for (var transacao : porDataFinanceira) {
+      if (ids.add(transacao.getId())) {
+        resultado.add(transacao);
+      }
+    }
+    for (var transacao : porSegmento) {
+      if (ids.add(transacao.getId())) {
+        resultado.add(transacao);
+      }
+    }
+    return resultado;
+  }
+
+  private boolean atendeFiltros(
+      ResolverOcorrenciasRecorrentes.Resultado resultado,
+      Set<UUID> contaIds,
+      Set<UUID> categoriaIds) {
+    return (contaIds.isEmpty() || contaIds.contains(resultado.contaId()))
+        && (categoriaIds.isEmpty() || categoriaIds.contains(resultado.categoriaId()));
+  }
+
+  private Item item(ResolverOcorrenciasRecorrentes.Resultado resultado) {
+    return new Item(
+        resultado.origem(),
+        resultado.operacaoId(),
+        resultado.situacao(),
+        resultado.descricao(),
+        resultado.observacoes(),
+        resultado.valor(),
+        resultado.dataFinanceira(),
+        resultado.efetivadoEm(),
+        resultado.contaId(),
+        resultado.categoriaId(),
+        resultado.contaContraparteId(),
+        resultado.grupoRecorrenciaId(),
+        resultado.segmentoRecorrenciaId(),
+        resultado.dataOriginalRecorrencia(),
+        resultado.numeroParcela(),
+        resultado.rrule(),
+        resultado.inicioRecorrencia(),
+        resultado.politicaDataOcorrencia());
   }
 
   private Periodo resolverPeriodo(YearMonth inicio, YearMonth fim) {
@@ -260,5 +402,45 @@ public class ConsultarTransacoes {
       java.time.Instant efetivadoEm,
       UUID contaId,
       UUID categoriaId,
-      UUID contaContraparteId) {}
+      UUID contaContraparteId,
+      UUID grupoRecorrenciaId,
+      UUID segmentoRecorrenciaId,
+      LocalDate dataOriginalRecorrencia,
+      Integer numeroParcela,
+      String rrule,
+      LocalDate inicioRecorrencia,
+      PoliticaDataOcorrencia politicaDataOcorrencia) {
+    public Item(
+        OrigemItemConsulta origem,
+        UUID operacaoId,
+        SituacaoTransacao situacao,
+        String descricao,
+        String observacoes,
+        BigDecimal valor,
+        LocalDate dataFinanceira,
+        java.time.Instant efetivadoEm,
+        UUID contaId,
+        UUID categoriaId,
+        UUID contaContraparteId) {
+      this(
+          origem,
+          operacaoId,
+          situacao,
+          descricao,
+          observacoes,
+          valor,
+          dataFinanceira,
+          efetivadoEm,
+          contaId,
+          categoriaId,
+          contaContraparteId,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null);
+    }
+  }
 }

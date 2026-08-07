@@ -1,5 +1,6 @@
 package com.joaovpg.economize.usuario.http;
 
+import com.joaovpg.economize.shared.http.LogHttpErrors;
 import com.joaovpg.economize.usuario.application.AutenticarUsuario;
 import com.joaovpg.economize.usuario.application.CadastrarUsuario;
 import com.joaovpg.economize.usuario.http.dto.request.CadastroRequest;
@@ -14,6 +15,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 @Path("/autenticacao")
+@LogHttpErrors
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class AutenticacaoResource {

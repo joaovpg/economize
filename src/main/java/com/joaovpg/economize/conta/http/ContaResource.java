@@ -6,6 +6,7 @@ import com.joaovpg.economize.conta.application.EditarConta;
 import com.joaovpg.economize.conta.application.ListarContas;
 import com.joaovpg.economize.conta.http.dto.request.CadastrarContaRequest;
 import com.joaovpg.economize.conta.http.dto.request.EditarContaRequest;
+import com.joaovpg.economize.shared.http.LogHttpErrors;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
@@ -22,6 +23,7 @@ import java.util.UUID;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 @Path("/contas")
+@LogHttpErrors
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @RolesAllowed("usuario")

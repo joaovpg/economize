@@ -1,6 +1,7 @@
 package com.joaovpg.economize.transacao.http;
 
 import com.joaovpg.economize.shared.exception.ValidacaoException;
+import com.joaovpg.economize.shared.http.LogHttpErrors;
 import com.joaovpg.economize.transacao.application.AlterarTransacao;
 import com.joaovpg.economize.transacao.application.ConsultarTransacoes;
 import com.joaovpg.economize.transacao.application.CriarTransacao;
@@ -30,6 +31,7 @@ import java.util.function.Function;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 @Path("/transacoes")
+@LogHttpErrors
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class TransacaoResource {

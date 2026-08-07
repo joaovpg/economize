@@ -4,6 +4,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
@@ -185,6 +186,8 @@ class CadastrarUsuarioResourceTest {
         .body("status", equalTo(400))
         .body("type", equalTo("urn:economize:problem:JSON_MALFORMADO"))
         .body("title", equalTo("JSON invalido"))
-        .body("detail", equalTo("O corpo da requisicao contem um JSON malformado"));
+        .body("detail", equalTo("O corpo da requisicao contem um JSON malformado"))
+        .body("traceId", matchesPattern("[0-9a-f-]{36}"))
+        .header("X-Trace-Id", matchesPattern("[0-9a-f-]{36}"));
   }
 }

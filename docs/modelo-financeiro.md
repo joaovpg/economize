@@ -13,6 +13,7 @@ O MVP registra e cataloga movimentacoes financeiras pessoais. Cada registro fina
 | `TB005_SEGMENTO_RECORRENCIA` | Segmento de recorrencia | Trecho independente governado por uma RRULE |
 | `TB006_TRANSACAO` | Transacao | Receita, despesa, ocorrencia recorrente ou lado de transferencia |
 | `TB007_TRANSFERENCIA` | Transferencia | Operacao logica que vincula uma saida e uma entrada |
+| `TB008_SUPRESSAO_RECORRENCIA` | Supressao de recorrencia | Ausencia intencional de uma ocorrencia virtual |
 
 ## Convencoes fisicas
 
@@ -46,9 +47,17 @@ Categorias sao cadastradas ativas. Nome e unico sem diferenciar caixa entre cate
 
 ## Recorrencia
 
-Um grupo de recorrencia preserva somente a origem comum. Cada segmento possui dados financeiros proprios, DTSTART e uma RRULE canonica sem o prefixo `RRULE:`. O MVP planejado aceita `DAILY`, `WEEKLY`, `MONTHLY` e `YEARLY`, alem de `INTERVAL`, `COUNT`, `UNTIL`, `BYDAY` e `BYMONTHDAY`.
+Um grupo preserva a origem comum e seu tipo, `RECORRENCIA` ou `PARCELAMENTO`. Cada segmento possui dados financeiros proprios, DTSTART, periodo opcional e uma RRULE canonica sem o prefixo `RRULE:`. O motor aceita `DAILY`, `WEEKLY`, `MONTHLY` e `YEARLY`, alem de `INTERVAL`, `COUNT`, `UNTIL`, `BYDAY` e `BYMONTHDAY` no subconjunto definido pela aplicacao.
 
-Editar somente uma ocorrencia a transforma em excecao: ela permanece no grupo, mas deixa de pertencer ao segmento. Editar a partir de uma ocorrencia encerra o segmento anterior e cria outro, com numeracao independente. A implementacao da expansao, validacao completa da RFC e edicao de segmentos pertence ao marco do motor de recorrencia.
+A consulta unificada retorna a RRULE com o DTSTART do Segmento e a politica de datas. Recorrencias usam `PADRAO`; Parcelamentos usam `AJUSTAR_ULTIMO_DIA_MES` para reproduzir datas mensais e anuais inexistentes no cliente.
+
+Ocorrencias virtuais sao expandidas em memoria e nao geram Transacoes por efeito colateral. A identidade logica e `Segmento de recorrencia + Data original da ocorrencia`. Efetivar ou editar `ONLY_THIS` materializa uma excecao ligada ao mesmo Grupo, Segmento e data original; corrigir uma Transacao efetivada preserva seu instante de efetivacao. Excluir uma ocorrencia virtual grava uma Supressao de recorrencia. Excluir explicitamente uma Transacao materializada remove a Transacao e grava a Supressao na mesma operacao, para que a virtual nao reapareca.
+
+`THIS_AND_FUTURE` so pode ser usado para ocorrencia virtual. Em edicao, ele encerra o Segmento anterior antes do corte e cria outro no mesmo Grupo. Em exclusao, ele encerra o Segmento do corte e todos os Segmentos ativos posteriores do Grupo, remove apenas materializacoes planejadas e preserva Transacoes efetivadas; quando o corte elimina toda a projecao virtual, o Grupo fica `CANCELADO`; quando existem ocorrencias virtuais anteriores preservadas, fica `CONCLUIDO` para manter esse historico consultavel.
+
+Excluir com `escopo=THIS_AND_FUTURE` encerra o Segmento a partir da ocorrencia virtual selecionada, remove somente excecoes planejadas posteriores e preserva Transacoes efetivadas.
+
+Parcelamentos sao finitos, guardam o valor por parcela, a primeira parcela e a quantidade total original, e derivam a numeracao sem persistir um valor total. Datas mensais e anuais inexistentes sao ajustadas para o ultimo dia do mes; supressoes nao renumeram parcelas.
 
 ## Transferencias
 
@@ -60,4 +69,4 @@ Transferencias sao criadas, substituidas ou excluidas por contratos proprios de 
 
 ## Limites desta entrega
 
-Esta entrega fornece migrations, entidades, repositorios, constraints estruturais, cadastro de usuario, autenticacao JWT, gestao de categorias, gestao de Contas financeiras, o ciclo completo de receitas e despesas simples e a consulta unificada com Saldo de abertura. A expansao ou edicao de recorrencias permanece para o proximo marco. Quando esse modulo estiver disponivel, ocorrencias virtuais anteriores ao intervalo participarao do Saldo de abertura e ocorrencias dentro do intervalo aparecerao na linha do tempo.
+Esta entrega fornece migrations, entidades, repositorios, constraints estruturais, cadastro de usuario, autenticacao JWT, gestao de categorias, gestao de Contas financeiras, o ciclo completo de receitas e despesas simples, a consulta unificada com Saldo de abertura e o primeiro ciclo do motor de recorrencias e parcelamentos. A consulta expande ocorrencias virtuais no intervalo e no Saldo de abertura, enquanto as escritas de series usam o recurso unico `/api/recorrencias`, discriminado por `tipoGrupo` (`RECORRENCIA` ou `PARCELAMENTO`).
